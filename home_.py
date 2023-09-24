@@ -162,8 +162,8 @@ def connect():
 
 # If Friend 'is' User
 
-    if friend == config.User:
-
+    if friend == config.User and friend is not None:
+        print(friend)
         print("")
         print("That's you, silly!")
         print("")
