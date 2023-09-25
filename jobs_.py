@@ -56,6 +56,68 @@ def parse_salary():
 
     return float(salary)
 
+                                  # ---------------------#
+    # ----------------------------#      Load Jobs       #---------------------------#
+                                  # ---------------------#
+
+    # Gets all jobs from job posting database, returns them. #
+    # Called in count jobs
+
+def load_jobs():
+
+    # Connect to Database
+
+    connection, cursor = jobs_connect()
+
+    if connection is None:
+        return
+
+    # Define Target Info
+
+    query = '''
+        SELECT
+            id,
+            job_title,
+            description,
+            location,
+            employer,
+            salary,
+            first_name,
+            last_name
+        FROM
+            jobs;
+    '''
+
+    # Execute Query
+
+    try:
+        cursor.execute(query)
+        jobs_data = cursor.fetchall()
+        jobs = [{
+            "Id": id,
+            "Job Title": job_title,
+            "Description": description,
+            "Location": location,
+            "Employer": employer,
+            "Salary": salary,
+            "First Name": first_name,
+            "Last Name": last_name
+        } for id, job_title, description, location, employer, salary, first_name, last_name in jobs_data]
+
+    except sqlite3.Error as err:
+        print("There was an error delivering the query: ", err)
+
+
+    # Close Connection
+
+    finally:
+
+        if connection:
+            connection.commit()
+            connection.close()
+
+            return jobs
+
 
                               #------------------#
 #-----------------------------#    Count Jobs    #-----------------------------#
@@ -65,21 +127,12 @@ def parse_salary():
                      # Called at beginning of post_job() #
 
 def room_for_job():
+    jobs = load_jobs()
+    job_count = len(jobs);
 
-    try:
-        connection, cursor = jobs_connect()
-
-        cursor.execute('SELECT COUNT(*) FROM jobs')
-        job_count = cursor.fetchone()[0]
-
-        return job_count < config.MaxJobs
+    return job_count < config.MaxJobs
 
 
-    except sqlite3.Error as err:
-        print("There was an error counting the jobs: ", err)
-        return False
-
-    finally: connection.close()
 
 
 
