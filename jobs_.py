@@ -10,22 +10,24 @@
                              #--------------------#
 #----------------------------#    Dependencies    #----------------------------#
                              #--------------------#
+
 import sqlite3
+
 import config
 
-from data_ import jobs_connect
-
-
+from config import DBJobs
+from data_ import connect_to
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
 #                                                                              #
 #                             [ 1 ] Parse Salary                               #
-#                             [ 2 ] Count Jobs                                 #
-#                             [ 3 ] Post Job                                   #
-#                             [ 4 ] Save Job                                   #
-#                             [ 5 ] Job Menu                                   #
+#                             [ 2 ] Load Jobs                                  #
+#                             [ 3 ] Count Jobs                                 #
+#                             [ 4 ] Post Job                                   #
+#                             [ 5 ] Save Job                                   #
+#                             [ 6 ] Job Menu                                   #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -44,35 +46,46 @@ from data_ import jobs_connect
 def parse_salary():
 
     while True:
+
+# Prompt
+
         salary = input("  Salary: ")
+
+
+# Replace Unwanted Characters
 
         salary = salary.replace('$', '')
         salary = salary.replace(',', '')
 
         if salary.replace('.', '').isdigit(): break
 
+
+# Error Handling
+
         else:
             print("Invalid salary - please input only numeric values.")
 
     return float(salary)
 
-                                  # ---------------------#
-    # ----------------------------#      Load Jobs       #---------------------------#
-                                  # ---------------------#
+                             #---------------------#
+#----------------------------#      Load Jobs      #---------------------------#
+                             #---------------------#
 
-    # Gets all jobs from job posting database, returns them. #
-    # Called in count jobs
+            # Gets all jobs from job posting database, returns them. #
+                             # Called in count jobs #
 
 def load_jobs():
 
-    # Connect to Database
 
-    connection, cursor = jobs_connect()
+# Connect to Database
+
+    connection, cursor = connect_to(DBJobs)
 
     if connection is None:
         return
 
-    # Define Target Info
+
+# Define Target Info
 
     query = '''
         SELECT
@@ -88,13 +101,14 @@ def load_jobs():
             jobs;
     '''
 
-    # Execute Query
+
+# Execute Query
 
     try:
         cursor.execute(query)
         jobs_data = cursor.fetchall()
-        jobs = [{
-            "Id": id,
+        config.Jobs = [{
+            "Id": job_id,
             "Job Title": job_title,
             "Description": description,
             "Location": location,
@@ -102,13 +116,13 @@ def load_jobs():
             "Salary": salary,
             "First Name": first_name,
             "Last Name": last_name
-        } for id, job_title, description, location, employer, salary, first_name, last_name in jobs_data]
+        } for job_id, job_title, description, location, employer, salary, first_name, last_name in jobs_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
 
 
-    # Close Connection
+# Close Connection
 
     finally:
 
@@ -116,7 +130,8 @@ def load_jobs():
             connection.commit()
             connection.close()
 
-            return jobs
+            return config.Jobs
+
 
 
                               #------------------#
@@ -127,12 +142,11 @@ def load_jobs():
                      # Called at beginning of post_job() #
 
 def room_for_job():
+
     jobs = load_jobs()
-    job_count = len(jobs);
+    job_count = len(jobs)
 
     return job_count < config.MaxJobs
-
-
 
 
 
@@ -147,9 +161,9 @@ def post_job(first_name, last_name):
 
 
     print("")
-    print("|------------|")
-    print("  Post a Job  ")
-    print("|------------|")
+    print("|----------------------------|")
+    print("          Post a Job          ")
+    print("|----------------------------|")
     print("")
 
     if room_for_job():
@@ -205,7 +219,7 @@ def save_job(job):
 
 # Connect to DB
 
-    connection, cursor = jobs_connect()
+    connection, cursor = connect_to(DBJobs)
 
 
 # To these Columns...
@@ -267,9 +281,9 @@ def job_menu():
 
 
     print("")
-    print("|-------------------------|")
-    print("  Job Search / Internship  ")
-    print("|-------------------------|")
+    print("|-----------------------------|")
+    print("    Job Search / Internship    ")
+    print("|-----------------------------|")
     print("")
 
 
@@ -287,32 +301,10 @@ def job_menu():
 
 # Outcomes
 
-    if jobs_choice == "1":
-
-        print("")
-        print("  / / / / / / / / / / / / / / / / / / / /")
-        print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-        print("/ / / / / / / / / / / / / / / / / / / /")
-        print("")
-
-
-    elif jobs_choice == "2":
-
-        print("")
-        print("  / / / / / / / / / / / / / / / / / / / /")
-        print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-        print("/ / / / / / / / / / / / / / / / / / / /")
-        print("")
-
-
-    elif jobs_choice == "3":
-        post_job(
-            config.User["First Name"],
-            config.User["Last Name"]
-            )
-
-    elif jobs_choice == "4":
-        return
+    if jobs_choice == "1": config.under_construction()
+    elif jobs_choice == "2": config.under_construction()
+    elif jobs_choice == "3": post_job(config.User["First Name"], config.User["Last Name"])
+    elif jobs_choice == "4": return
 
     else:
         print("Invalid choice. Please select a number 1-4.")

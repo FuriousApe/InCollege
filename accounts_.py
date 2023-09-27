@@ -15,9 +15,10 @@ import sqlite3
 
 import config
 import home_
-from data_ import accounts_connect
+import settings_
 
-
+from config import DBAccounts
+from data_ import connect_to
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
@@ -34,8 +35,9 @@ from data_ import accounts_connect
 #                             [ 7 ] Create Account                             #
 #                                                                              #
 #                             [ 9 ] Get Profile Info                           #
-#                             [ 10 ] Login                                     #
-#                             [ 11 ] Login Menu                                #
+#                             [ 10 ] Log In                                    #
+#                             [ 11 ] Log Out                                   #
+#                             [ 12 ] Login Menu                                #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -58,7 +60,7 @@ def load_accounts():
 
 # Connect to Database
 
-    connection, cursor = accounts_connect()
+    connection, cursor = connect_to(DBAccounts)
 
     if connection is None:
         return
@@ -82,7 +84,7 @@ def load_accounts():
     try:
         cursor.execute(query)
         accounts_data = cursor.fetchall()
-        accounts = [{
+        config.Accounts = [{
                     "Username": username,
                     "Password": password,
                     "First Name": first_name,
@@ -101,7 +103,7 @@ def load_accounts():
             connection.commit()
             connection.close()
 
-            return accounts
+            return config.Accounts
 
 
 
@@ -117,7 +119,7 @@ def save_accounts(accounts):
 
 # Connect to Database
 
-    connection, cursor = accounts_connect()
+    connection, cursor = connect_to(DBAccounts)
 
     if connection is None:
         return
@@ -309,9 +311,9 @@ def create_account():
         return
 
     print("")
-    print("|------------------|")
-    print("  Account Creation  ")
-    print("|------------------|")
+    print("|----------------------------|")
+    print("       Account Creation       ")
+    print("|----------------------------|")
     print("")
 
 
@@ -383,6 +385,7 @@ def create_account():
                     "Last Name": last_name
                     })
     save_accounts(accounts)
+    settings_.initialize_user(username)
     print("")
     print("Account created successfully.")
     print("")
@@ -399,9 +402,9 @@ def create_account():
 def get_profile(username):
 
     try:
-        connection, cursor = accounts_connect()
+        config.Connection, cursor = connect_to(DBAccounts)
 
-        if connection is None:
+        if config.Connection is None:
             return
 
 
@@ -419,12 +422,13 @@ def get_profile(username):
                 username = ?
         '''
 
+
 # Execute query
 
         cursor.execute(query, (username,))
         user_data = cursor.fetchone()
 
-        profile = {
+        config.User = {
                     "Username": user_data[0],
                     "Password": user_data[1],
                     "First Name": user_data[2],
@@ -441,11 +445,11 @@ def get_profile(username):
 # Close and Return
 
     finally:
-        if connection:
-            connection.commit()
-            connection.close()
+        if config.Connection:
+            config.Connection.commit()
+            config.Connection.close()
 
-        return profile
+            return config.User
 
 
                                  #-------------#
@@ -478,7 +482,11 @@ def login():
 
             print(result)
             config.User = get_profile(username)
+
+            settings_.load_user_settings()
+            settings_.initialize_settings_database()
             home_.home()
+
             return
 
         else:
@@ -494,6 +502,22 @@ def login():
 
             if choice:
                 return
+
+
+
+
+
+                                 #--------------#
+#--------------------------------#    Logout    #------------------------------#
+                                 #--------------#
+
+            # Logs the user out; resets all global variables to default #
+                          # One of the paths from home() #
+
+def logout():
+
+    config.User = None
+    config.UserSettings = None
 
 
 
@@ -514,9 +538,9 @@ def login_menu():
         home_.show_success_story()
 
         print("")
-        print("|---------|")
-        print("  Options  ")
-        print("|---------|")
+        print("|-----------------------------|")
+        print("            Options            ")
+        print("|-----------------------------|")
         print("")
 
         print("  [1] Watch Video Testimonial")
@@ -526,27 +550,24 @@ def login_menu():
         print("      [5] Quit")
         print("")
 
-        login_choice = input("Enter an option (1-4): ")
+        login_choice = input("Enter an option (or press Enter to access links): ")
         print("")
 
 
 # User Chooses
 
-        if login_choice == "1":
-            home_.watch_video()
-
-        elif login_choice == "2":
-            login()
-
-        elif login_choice == "3":
-            create_account()
-
-        elif login_choice == "4":
-            home_.friend_status()
+        if login_choice == "": home_.linkster()
+        elif login_choice == "1": home_.watch_video()
+        elif login_choice == "2": login()
+        elif login_choice == "3": create_account()
+        elif login_choice == "4": home_.friend_status()
 
         elif login_choice == "5":
             print("Quitting the app...")
             exit()
+
+
+# Error Handling
 
         else:
             print("Your chosen input is invalid. Please select a number 1-4.")

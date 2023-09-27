@@ -9,12 +9,8 @@
 #----------------------------#    Dependencies    #----------------------------#
                              #--------------------#
 
-from data_ import create_student_table, create_job_table
+from data_ import create_all_tables
 from accounts_ import login_menu
-
-
-
-
 
                                 #################
 ###################################  M A I N  ##################################
@@ -25,8 +21,7 @@ from accounts_ import login_menu
 
 if __name__ == "__main__":
 
-    create_student_table()
-    create_job_table()
+    create_all_tables()
     login_menu()
 
 
