@@ -12,18 +12,20 @@
                              #--------------------#
 
 import sqlite3
-import config
 
-
+from config import DBAccounts, DBSettings, DBJobs
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
 #                                                                              #
-#                             [ 1 ] Student Connection                         #
-#                             [ 2 ] Job Connection                             #
-#                             [ 3 ] Student Table                              #
-#                             [ 4 ] Job Table                                  #
+#                             [ 1 ] Database Connection                        #
+#                                                                              #
+#                             [ 2 ] Table - Accounts                           #
+#                             [ 3 ] Table - Settings                           #
+#                             [ 4 ] Table - Jobs                               #
+#                                                                              #
+#                             [ 5 ] Create All Tables                          #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -34,43 +36,22 @@ import config
 
                    # Functions that connect to each database #
 
-                          #--------------------------#
-#-------------------------#    Student Connection    #-------------------------#
-                          #--------------------------#
+                         #---------------------------#
+#------------------------#    Database Connection    #-------------------------#
+                         #---------------------------#
 
-         # Connects to student database; returns connection and cursor #
-             # Called when creating trying to access student info #
+       # Connects to passed database address; returns connection and cursor #
 
-def accounts_connect():
+def connect_to(database):
 
     try:
-        connection = sqlite3.connect(config.DBAccounts)
+        connection = sqlite3.connect(database)
         cursor = connection.cursor()
         return connection, cursor
 
     except sqlite3.Error as err:
-        print("There was an error connecting to the student database: ", err)
+        print("There was an error connecting to the database: ", err)
         return None, None
-
-
-                            #----------------------#
-#---------------------------#    Job Connection    #---------------------------#
-                            #----------------------#
-
-          # Connects to job database; returns connection and cursor #
-              # Called when creating trying to access job info #
-
-def jobs_connect():
-
-    try:
-        connection = sqlite3.connect(config.DBJobs)
-        cursor = connection.cursor()
-        return connection, cursor
-
-    except sqlite3.Error as err:
-        print("There was an error connecting to the job database: ", err)
-        return None, None
-
 
 
 
@@ -80,14 +61,14 @@ def jobs_connect():
 
                   # Functions that create each database table #
 
-                             #---------------------#
-#----------------------------#    Student Table    #---------------------------#
-                             #---------------------#
+                             #----------------------#
+#----------------------------#    Accounts Table    #--------------------------#
+                             #----------------------#
 
-def create_student_table():
+def create_accounts_table():
 
 
-    connection, cursor = accounts_connect()
+    connection, cursor = connect_to(DBAccounts)
 
     if connection is None:
         return
@@ -112,6 +93,41 @@ def create_student_table():
             connection.close()
 
 
+                             #----------------------#
+#----------------------------#    Settings Table    #--------------------------#
+                             #----------------------#
+
+def create_settings_table():
+
+
+    connection, cursor = connect_to(DBSettings)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS settings (
+                username VARCHAR(12) PRIMARY KEY,
+                language VARCHAR(12),
+                email_on BOOLEAN,
+                sms_on BOOLEAN,
+                ads_on BOOLEAN,
+                FOREIGN KEY (username) REFERENCES accounts(username),
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
+            );
+        ''')
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("There was an error creating the settings table: ", err)
+
+    finally:
+
+        if connection:
+            connection.close()
+
+
                                #-----------------#
 #------------------------------#    Job Table    #-----------------------------#
                                #-----------------#
@@ -119,7 +135,7 @@ def create_student_table():
 def create_job_table():
 
 
-    connection, cursor = jobs_connect()
+    connection, cursor = connect_to(DBJobs)
 
     if connection is None:
         return
@@ -127,7 +143,7 @@ def create_job_table():
     try:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS jobs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                job_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 job_title VARCHAR(250),
                 description TEXT,
                 location VARCHAR(250),
@@ -151,6 +167,17 @@ def create_job_table():
 
         if connection:
             connection.close()
+
+
+                             #---------------------#
+#----------------------------#    Create Tables    #---------------------------#
+                             #---------------------#
+
+def create_all_tables():
+
+    create_accounts_table()
+    create_settings_table()
+    create_job_table()
 
 
 

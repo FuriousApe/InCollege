@@ -11,8 +11,7 @@
 #----------------------------#    Dependencies    #----------------------------#
                              #--------------------#
 
-
-
+import config
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
@@ -33,49 +32,19 @@
                           #---------------------------#
 
 def time_management():
-
-    print("")
-    print("  / / / / / / / / / / / / / / / / / / / /")
-    print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-    print("/ / / / / / / / / / / / / / / / / / / /")
-    print("")
-
+    config.under_construction()
 
 def communication():
-
-    print("")
-    print("  / / / / / / / / / / / / / / / / / / / /")
-    print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-    print("/ / / / / / / / / / / / / / / / / / / /")
-    print("")
-
+    config.under_construction()
 
 def networking():
-
-    print("")
-    print("  / / / / / / / / / / / / / / / / / / / /")
-    print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-    print("/ / / / / / / / / / / / / / / / / / / /")
-    print("")
-
+    config.under_construction()
 
 def team_building():
-
-    print("")
-    print("  / / / / / / / / / / / / / / / / / / / /")
-    print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-    print("/ / / / / / / / / / / / / / / / / / / /")
-    print("")
-
+    config.under_construction()
 
 def organization():
-
-    print("")
-    print("  / / / / / / / / / / / / / / / / / / / /")
-    print(" / / / / /  UNDER CONSTRUCTION / / / / /")
-    print("/ / / / / / / / / / / / / / / / / / / /")
-    print("")
-
+    config.under_construction()
 
 
 #------------------------------#------------------#----------------------------#
@@ -105,26 +74,20 @@ def skill_menu():
 
         print("0. Return to the Main Menu")
 
-        choice = input("Select a number 0-5: ")
+        choice = input("Please select an option (or press Enter to return): ")
 
 
 # Skill Selection
 
-        if choice == "0":
-            return
-
+        if choice == "0" or choice == "": return
         elif choice == "1": time_management()
-
         elif choice == "2": communication()
-
         elif choice == "3": networking()
-
         elif choice == "4": team_building()
-
         elif choice == "5": organization()
 
         else:
-            print("Your input is invalid. Please select a number 0-5.")
+            print("Invalid input. Please enter an available option.")
 
 
 
