@@ -8,6 +8,7 @@ import accounts_
 import home_
 import jobs_
 import policies_
+import config
 
 
 def test_important_links(monkeypatch):
@@ -374,3 +375,114 @@ def test_brand_policy(monkeypatch):
     assert "far greater number of recent college graduates" in actual
     assert "secure the life that they, and their loved ones," in actual
     assert "hope they might one day achieve." in actual
+
+def test_privacy_policy_nologin(monkeypatch):
+    # Set input
+    inputs = iter([''])
+    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+
+    # Get output from console and run function
+    output = io.StringIO()
+    sys.stdout = output
+    policies_.privacy()
+    sys.stdout = sys.__stdout__
+
+    actual = output.getvalue().replace("\n", "")
+
+    # Test privacy policy message
+    assert "We only use your personal information for the" in actual
+    assert "purpose of improving the InCollege app and/or" in actual
+    assert "any other venture in the future of Team Colorado" in actual
+    assert "and any of our associates henceforth." in actual
+    assert "While on the InCollege app, we collect the" in actual
+    assert "information sent by your browser or device. This" in actual
+    assert "may include details such as your IP address, page" in actual
+    assert "history (within our application or site) or amount" in actual
+    assert "of time spent within the app itself." in actual
+
+    # Guest controls not available
+    assert "Guest Controls" not in actual
+
+@patch('config.Accounts', [{"Username": "TestUser",
+                                                 "Password": "Password123!",
+                                                 "First Name": "John",
+                                                 "Last Name": "Smith"
+                                                 }
+                                                ])
+@patch('config.User', {"Username": "TestUser",
+                                                 "Password": "Password123!",
+                                                 "First Name": "John",
+                                                 "Last Name": "Smith"
+                                                 })
+@patch('config.UserSettings', {"Username": "TestUser",
+                                                 "Language": "English",
+                                                 "Email On": True,
+                                                 "SMS On": True,
+                                                 "Ads On": True
+                                                 })
+@patch('settings_.save_all_settings', MagicMock(return_value=True))
+@patch('settings_.save_user_settings', MagicMock(return_value=True))
+def test_privacy_policy_login(monkeypatch):
+    # Set input
+    inputs = iter(['', '<', 'e', '<', '2', '', '4'])
+    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+
+    # Get output from console and run function
+    output = io.StringIO()
+    sys.stdout = output
+    home_.home()
+    sys.stdout = sys.__stdout__
+
+    actual = output.getvalue().replace("\n", "")
+
+    # Test that initial settings are loaded
+    assert "Email : On" in actual
+    assert "SMS : On" in actual
+    assert "Targeted Ads : On" in actual
+
+    # Test that SMS is changed
+    assert "SMS : Off" in actual
+
+    # Test that other settings are not changed
+    assert "Email : Off" not in actual
+    assert "Targeted Ads : Off" not in actual
+
+@patch('config.Accounts', [{"Username": "TestUser",
+                                                 "Password": "Password123!",
+                                                 "First Name": "John",
+                                                 "Last Name": "Smith"
+                                                 }
+                                                ])
+@patch('config.User', {"Username": "TestUser",
+                                                 "Password": "Password123!",
+                                                 "First Name": "John",
+                                                 "Last Name": "Smith"
+                                                 })
+@patch('config.UserSettings', {"Username": "TestUser",
+                                                 "Language": "English",
+                                                 "Email On": True,
+                                                 "SMS On": True,
+                                                 "Ads On": True
+                                                 })
+@patch('settings_.save_all_settings', MagicMock(return_value=True))
+@patch('settings_.save_user_settings', MagicMock(return_value=True))
+def test_languages(monkeypatch):
+    # Set input
+    inputs = iter(['', '<', 'i', '1', '', '4'])
+    monkeypatch.setattr('builtins.input', lambda _: next(inputs))
+
+    # Get output from console and run function
+    output = io.StringIO()
+    sys.stdout = output
+    home_.home()
+    sys.stdout = sys.__stdout__
+
+    actual = output.getvalue().replace("\n", "")
+
+    # Test that initial language is loaded
+    assert "Language : English" in actual
+
+    # Test that language is changed
+    assert "Language : Spanish" in actual
+
+
