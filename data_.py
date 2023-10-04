@@ -13,9 +13,10 @@
 
 import sqlite3
 
-from config import DBAccounts, DBSettings, DBJobs
+from config import DBAccounts, DBSettings, DBJobs, DBConnections, DBRequests
 
-                           #-------------------------#
+
+                         #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
 #                                                                              #
@@ -24,8 +25,10 @@ from config import DBAccounts, DBSettings, DBJobs
 #                             [ 2 ] Table - Accounts                           #
 #                             [ 3 ] Table - Settings                           #
 #                             [ 4 ] Table - Jobs                               #
+#                             [ 5 ] Table - Requests                           #
+#                             [ 6 ] Table - Connections                        #
 #                                                                              #
-#                             [ 5 ] Create All Tables                          #
+#                             [ 7 ] Create All Tables                          #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -168,6 +171,71 @@ def create_job_table():
         if connection:
             connection.close()
 
+                              # ---------------------#
+# ----------------------------#    Requests Table    #--------------------------#
+                              # ---------------------#
+
+def create_requests_table():
+
+    connection, cursor = connect_to(DBRequests)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS requests (
+                request_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requester VARCHAR(12),
+                recipient VARCHAR(12),
+                FOREIGN KEY (requester) REFERENCES accounts(username),
+                FOREIGN KEY (recipient) REFERENCES accounts(username),
+                CONSTRAINT fk_username FOREIGN KEY (requester) REFERENCES accounts(username),
+                CONSTRAINT fk_username FOREIGN KEY (recipient) REFERENCES accounts(username)
+            );
+        ''')
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("There was an error creating the requests table: ", err)
+
+    finally:
+
+        if connection:
+            connection.close()
+
+                              # ------------------------#
+# ----------------------------#    Connections Table    #--------------------------#
+                              # ------------------------#
+
+def create_connections_table():
+
+    connection, cursor = connect_to(DBConnections)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+                        CREATE TABLE IF NOT EXISTS connections (
+                            connection_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            person1 VARCHAR(12),
+                            person2 VARCHAR(12),
+                            FOREIGN KEY (person1) REFERENCES accounts(username),
+                            FOREIGN KEY (person2) REFERENCES accounts(username),
+                            CONSTRAINT fk_username FOREIGN KEY (person1) REFERENCES accounts(username),
+                            CONSTRAINT fk_username FOREIGN KEY (person2) REFERENCES accounts(username)
+                        );
+                    ''')
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("There was an error creating the connections table: ", err)
+
+    finally:
+
+        if connection:
+            connection.close()
 
                              #---------------------#
 #----------------------------#    Create Tables    #---------------------------#
@@ -178,6 +246,8 @@ def create_all_tables():
     create_accounts_table()
     create_settings_table()
     create_job_table()
+    create_requests_table()
+    create_connections_table()
 
 
 

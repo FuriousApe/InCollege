@@ -55,7 +55,7 @@ PasswordMinLength = 8
 PasswordMaxLength = 12
 
 # Limitations
-MaxAccounts = 5
+MaxAccounts = 10
 MaxJobs = 5
 
 
@@ -67,6 +67,8 @@ MaxJobs = 5
 DBAccounts = 'student_accounts.db'
 DBSettings = 'user_settings.db'
 DBJobs = 'job_postings.db'
+DBRequests = 'requests.db'
+DBConnections = 'connections.db'
 
 
                                  #--------------#
