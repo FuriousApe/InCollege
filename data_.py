@@ -16,7 +16,7 @@ import sqlite3
 from config import DBAccounts, DBSettings, DBJobs, DBConnections, DBRequests
 
 
-                         #-------------------------#
+                           #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
 #                                                                              #

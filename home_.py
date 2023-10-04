@@ -12,6 +12,7 @@
 import config
 import policies_
 import jobs_
+import requests_
 import skills_
 import accounts_
 
@@ -180,12 +181,14 @@ def search_lname():
     lname = lname.strip().lower()
     print("")
 
+    # Load result_accounts with search results
     result_accounts = []
 
     for account in accounts:
         if lname in account["Last Name"].strip().lower() and account != config.User:
             result_accounts.append(account)
 
+    # Print results
     if not result_accounts:
         print("")
         print("No accounts found.")
@@ -197,7 +200,29 @@ def search_lname():
             count += 1
 
         print("")
+
+        # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Recipient": config.User["Username"],
+            "Requester": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent
+        requests = requests_.load_requests()
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        else:
+            requests_.save_request(request)
 
 
 def search_university():
@@ -208,12 +233,14 @@ def search_university():
     university = university.strip().lower()
     print("")
 
+    # Load result_accounts with search results
     result_accounts = []
 
     for account in accounts:
         if university in account["University"].strip().lower() and account != config.User:
             result_accounts.append(account)
 
+    # Print results
     if not result_accounts:
         print("")
         print("No accounts found.")
@@ -225,7 +252,30 @@ def search_university():
             count += 1
 
         print("")
+
+        # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Recipient": config.User["Username"],
+            "Requester": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent
+        requests = requests_.load_requests()
+        print(requests)
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        else:
+            requests_.save_request(request)
 
 def search_major():
     accounts = accounts_.load_accounts()
@@ -235,12 +285,14 @@ def search_major():
     major = major.strip().lower()
     print("")
 
+    # Load result_accounts with search results
     result_accounts = []
 
     for account in accounts:
         if major in account["Major"].strip().lower() and account != config.User:
             result_accounts.append(account)
 
+    # Print results
     if not result_accounts:
         print("")
         print("No accounts found.")
@@ -252,7 +304,29 @@ def search_major():
             count += 1
 
         print("")
+
+        # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Requester": chosen_account["Username"],
+            "Recipient": config.User["Username"]
+        }
+
+        # Check that a request has not already been sent
+        requests = requests_.load_requests()
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        else:
+            requests_.save_request(request)
 
 
 
@@ -284,8 +358,9 @@ def home():
 
         print("  [1] Job Search / Internship")
         print("   [2] Find Someone You Know")
-        print("    [3] Learn a New Skill")
-        print("     [4] Log Out")
+        print("    [3] View incoming connection requests")
+        print("     [4] Learn a New Skill")
+        print("      [5] Log Out")
         print("")
 
 
@@ -296,9 +371,10 @@ def home():
         if main_choice == "": linkster()
         elif main_choice == "1": jobs_.job_menu()
         elif main_choice == "2": friend_connect()
-        elif main_choice == "3": skills_.skill_menu()
+        elif main_choice == "3": requests_.view_requests()
+        elif main_choice == "4": skills_.skill_menu()
 
-        elif main_choice == "4":
+        elif main_choice == "5":
             print("Logging out...")
             accounts_.logout()
             return
