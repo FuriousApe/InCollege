@@ -73,7 +73,9 @@ def load_accounts():
             username,
             password,
             first_name,
-            last_name
+            last_name,
+            university,
+            major
         FROM
             accounts;
     '''
@@ -88,8 +90,10 @@ def load_accounts():
                     "Username": username,
                     "Password": password,
                     "First Name": first_name,
-                    "Last Name": last_name
-                    } for username, password, first_name, last_name in accounts_data]
+                    "Last Name": last_name,
+                    "University": university,
+                    "Major": major
+                    } for username, password, first_name, last_name, university, major in accounts_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
@@ -132,9 +136,11 @@ def save_accounts(accounts):
             username,
             password,
             first_name,
-            last_name
+            last_name,
+            university,
+            major
         )
-        VALUES (?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?);
     '''
 
 
@@ -149,7 +155,9 @@ def save_accounts(accounts):
                     account['Username'],
                     account['Password'],
                     account['First Name'],
-                    account['Last Name']
+                    account['Last Name'],
+                    account['University'],
+                    account['Major']
                 )
             )
 
@@ -340,6 +348,26 @@ def create_account():
         else:
             break
 
+    while True:
+        university = input("University: ")
+        if not university:
+            print("")
+            print("You must enter your university to continue.")
+            print("")
+            continue
+        else:
+            break
+
+    while True:
+        major = input("Major: ")
+        if not major:
+            print("")
+            print("You must enter your major to continue.")
+            print("")
+            continue
+        else:
+            break
+
 
 # Creating a Username
 
@@ -382,7 +410,9 @@ def create_account():
                     "Username": username,
                     "Password": password,
                     "First Name": first_name,
-                    "Last Name": last_name
+                    "Last Name": last_name,
+                    "University": university,
+                    "Major": major
                     })
     save_accounts(accounts)
     settings_.initialize_user(username)
@@ -415,7 +445,9 @@ def get_profile(username):
                 username,
                 password,
                 first_name,
-                last_name
+                last_name,
+                university,
+                major
             FROM
                 accounts
             WHERE
@@ -432,7 +464,9 @@ def get_profile(username):
                     "Username": user_data[0],
                     "Password": user_data[1],
                     "First Name": user_data[2],
-                    "Last Name": user_data[3]
+                    "Last Name": user_data[3],
+                    "University": user_data[4],
+                    "Major": user_data[5],
                     }
 
 

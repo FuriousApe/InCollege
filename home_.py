@@ -24,12 +24,15 @@ import accounts_
 #                                                                              #
 #                             [ 3 ] Friend Status                              #
 #                             [ 4 ] Connect to a friend                        #
+#                             [ 5 ] Search by last name                        #
+#                             [ 6 ] Search by university                       #
+#                             [ 7 ] Search by major                            #
 #                                                                              #
-#                             [ 5 ] Home Screen                                #
+#                             [ 8 ] Home Screen                                #
 #                                                                              #
-#                             [ 6 ] Useful Links                               #
-#                             [ 7 ] InCollege Important Links                  #
-#                             [ 8 ] General Links                              #
+#                             [ 9 ] Useful Links                               #
+#                             [ 10 ] InCollege Important Links                 #
+#                             [ 11 ] General Links                             #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -151,48 +154,105 @@ def friend_connect():
     print("|-----------------------------|")
     print("")
 
-    print("Who would you like to find?")
+    print("How would you like to search?")
+    print("[1] Search by last name")
+    print("[2] Search by university")
+    print("[3] Search by major")
+
+    search_choice = input("Enter an option: ")
     print("")
 
+    # User Chooses
 
-# Get Input
+    if search_choice == "1":
+        search_lname()
+    elif search_choice == "2":
+        search_university()
+    elif search_choice == "3":
+        search_major()
 
-    first_name = input("First Name: ")
-    last_name = input("Last Name: ")
+def search_lname():
 
-    friend = accounts_.find_account(first_name, last_name)
+    accounts = accounts_.load_accounts()
 
+    print("")
+    lname = input("Enter a last name to search by: ")
+    lname = lname.strip().lower()
+    print("")
 
-# If Friend 'is' User
+    result_accounts = []
 
-    if friend == config.User and friend is not None:
+    for account in accounts:
+        if lname in account["Last Name"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    if not result_accounts:
         print("")
-        print("Hey, that's you!")
-        print("")
-
-        return
-
-
-
-# Results
-
-    if friend:
-
-        print("")
-        print("Looks like they're in the system!")
-        print("")
-        print("Here's their contact info:")
-        print("--------------------------")
-
-        print(friend["First Name"], friend["Last Name"])
-        print("Username:", friend["Username"])
-        print("")
-
+        print("No accounts found.")
     else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
 
         print("")
-        print("This person is not in the system yet.")
+        choice = input("Enter the number for a student to send a connection request: ")
+
+
+def search_university():
+    accounts = accounts_.load_accounts()
+
+    print("")
+    university = input("Enter a university to search by: ")
+    university = university.strip().lower()
+    print("")
+
+    result_accounts = []
+
+    for account in accounts:
+        if university in account["University"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    if not result_accounts:
         print("")
+        print("No accounts found.")
+    else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
+
+        print("")
+        choice = input("Enter the number for a student to send a connection request: ")
+
+def search_major():
+    accounts = accounts_.load_accounts()
+
+    print("")
+    major = input("Enter a major to search by: ")
+    major = major.strip().lower()
+    print("")
+
+    result_accounts = []
+
+    for account in accounts:
+        if major in account["Major"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    if not result_accounts:
+        print("")
+        print("No accounts found.")
+    else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
+
+        print("")
+        choice = input("Enter the number for a student to send a connection request: ")
 
 
 

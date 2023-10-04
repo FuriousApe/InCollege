@@ -82,7 +82,9 @@ def create_accounts_table():
                 username VARCHAR(12) PRIMARY KEY,
                 password VARCHAR(12),
                 first_name VARCHAR(50),
-                last_name VARCHAR(50)
+                last_name VARCHAR(50),
+                university VARCHAR(100),
+                major VARCHAR(50)
             );
         ''')
         connection.commit()
