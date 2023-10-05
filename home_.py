@@ -300,7 +300,6 @@ def search_university():
         # Check that a request has not already been sent, or that connection is not already made
         requests = requests_.load_requests()
         connections = connections_.load_connections()
-        print(requests)
         if request in requests:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests:
@@ -368,9 +367,6 @@ def search_major():
         # Check that a request has not already been sent, or that connection is not already made
         requests = requests_.load_requests()
         connections = connections_.load_connections()
-        for connection in connections:
-            print("Person1", connection["Person1"])
-            print("Person2", connection["Person2"])
         if request in requests:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests:
