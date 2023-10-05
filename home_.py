@@ -10,6 +10,7 @@
                              #--------------------#
 
 import config
+import connections_
 import policies_
 import jobs_
 import requests_
@@ -156,9 +157,9 @@ def friend_connect():
     print("")
 
     print("How would you like to search?")
-    print("[1] Search by last name")
-    print("[2] Search by university")
-    print("[3] Search by major")
+    print("[ 1 ] Search by last name")
+    print("[ 2 ] Search by university")
+    print("[ 3 ] Search by major")
 
     search_choice = input("Enter an option: ")
     print("")
@@ -203,6 +204,9 @@ def search_lname():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        if int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
         chosen_account = result_accounts[int(choice) - 1]
 
         request = {
@@ -215,12 +219,25 @@ def search_lname():
             "Requester": chosen_account["Username"]
         }
 
-        # Check that a request has not already been sent
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
         requests = requests_.load_requests()
+        connections = connections_.load_connections()
         if request in requests:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests:
             print("This person has already sent a connection request to you!")
+        elif connection in connections or reversed_connection in connections:
+            print("You are already connected with this person!")
         else:
             requests_.save_request(request)
 
@@ -255,6 +272,9 @@ def search_university():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        if int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
         chosen_account = result_accounts[int(choice) - 1]
 
         request = {
@@ -267,13 +287,26 @@ def search_university():
             "Requester": chosen_account["Username"]
         }
 
-        # Check that a request has not already been sent
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
         requests = requests_.load_requests()
+        connections = connections_.load_connections()
         print(requests)
         if request in requests:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests:
             print("This person has already sent a connection request to you!")
+        elif connection in connections or reversed_connection in connections:
+            print("You are already connected with this person!")
         else:
             requests_.save_request(request)
 
@@ -307,6 +340,9 @@ def search_major():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
+        if int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
         chosen_account = result_accounts[int(choice) - 1]
 
         request = {
@@ -319,12 +355,28 @@ def search_major():
             "Recipient": config.User["Username"]
         }
 
-        # Check that a request has not already been sent
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
         requests = requests_.load_requests()
+        connections = connections_.load_connections()
+        for connection in connections:
+            print("Person1", connection["Person1"])
+            print("Person2", connection["Person2"])
         if request in requests:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests:
             print("This person has already sent a connection request to you!")
+        elif (connection in connections) or (reversed_connection in connections):
+            print("You are already connected with this person!")
         else:
             requests_.save_request(request)
 
@@ -359,8 +411,9 @@ def home():
         print("  [1] Job Search / Internship")
         print("   [2] Find Someone You Know")
         print("    [3] View incoming connection requests")
-        print("     [4] Learn a New Skill")
-        print("      [5] Log Out")
+        print("     [4] Show my network")
+        print("      [5] Learn a New Skill")
+        print("       [6] Log Out")
         print("")
 
 
@@ -372,9 +425,10 @@ def home():
         elif main_choice == "1": jobs_.job_menu()
         elif main_choice == "2": friend_connect()
         elif main_choice == "3": requests_.view_requests()
-        elif main_choice == "4": skills_.skill_menu()
+        elif main_choice == "4": connections_.view_connections()
+        elif main_choice == "5": skills_.skill_menu()
 
-        elif main_choice == "5":
+        elif main_choice == "6":
             print("Logging out...")
             accounts_.logout()
             return
@@ -382,7 +436,7 @@ def home():
 # Error Handling
 
         else:
-            print("Invalid choice. Please select a number 1-4.")
+            print("Invalid choice. Please select a number 1-6.")
 
 
 

@@ -13,6 +13,7 @@
 import sqlite3
 
 import config
+import connections_
 
 from config import DBRequests
 from data_ import connect_to
@@ -209,12 +210,38 @@ def view_requests():
             print("[", str(count), "] ", request["Requester"])
             count += 1
 
-        # Let user chose a request to accept
+        # Let user chose a request to accept or deny
         print("")
-        choice = input("Enter the number for a request to accept: ")
+        choice = input("Enter the number for a request to manage: ")
+        if int(choice) < 1 or int(choice) > len(result_requests):
+            print("Invalid number.")
+            return
         chosen_request = result_requests[int(choice) - 1]
 
-        print(request["Requester"], "is now a connection!")
+        print("")
+        print("Chose whether to accept or reject this request:")
+        print("[ 1 ] Accept")
+        print("[ 2 ] Reject")
+        accept = input("Enter your selection: ")
 
-        # Delete request ( request is now a connection )
-        delete_request(chosen_request)
+
+        print("")
+        if int(accept) == 1:
+            print(chosen_request["Requester"], "is now a connection!")
+
+            # Delete request ( request is now a connection )
+            delete_request(chosen_request)
+
+            # Create connection
+            connection = {
+                "Person1": chosen_request["Requester"],
+                "Person2": chosen_request["Recipient"]
+            }
+
+            connections_.save_connection(connection)
+
+        elif int(accept) == 2:
+            print("Request is deleted!")
+
+            # Delete request
+            delete_request(chosen_request)

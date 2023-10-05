@@ -47,8 +47,11 @@ Jobs = None
 
 Requests = None
 # Dictionaries
-# Holds all posted jobs after load_requests()
+# Holds all requests after load_requests()
 
+Connections = None
+# Dictionaries
+# Holds all connections after load_connections()
 
 Connection = None
 # Occasionally used to hold active DB connection for error avoidance
