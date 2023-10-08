@@ -242,7 +242,9 @@ def view_connections():
         # Let user chose a connection to manage
         print("")
         choice = input("Enter the number for a connection to manage: ")
-        if int(choice) < 1 or int(choice) > len(result_connections):
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_connections):
             print("Invalid number.")
             return
         chosen_connection = result_connections[int(choice) - 1]
@@ -252,6 +254,8 @@ def view_connections():
         print("[ 1 ] Delete connection")
         print("")
         manage = input("Enter your selection: ")
+        if not manage.isdigit():
+            return
 
 
         print("")

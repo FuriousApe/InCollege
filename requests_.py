@@ -213,7 +213,9 @@ def view_requests():
         # Let user chose a request to accept or deny
         print("")
         choice = input("Enter the number for a request to manage: ")
-        if int(choice) < 1 or int(choice) > len(result_requests):
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_requests):
             print("Invalid number.")
             return
         chosen_request = result_requests[int(choice) - 1]
@@ -223,6 +225,8 @@ def view_requests():
         print("[ 1 ] Accept")
         print("[ 2 ] Reject")
         accept = input("Enter your selection: ")
+        if not accept.isdigit():
+            return
 
 
         print("")

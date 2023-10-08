@@ -204,7 +204,9 @@ def search_lname():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
-        if int(choice) < 1 or int(choice) > len(result_accounts):
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
             print("Invalid number.")
             return
         chosen_account = result_accounts[int(choice) - 1]
@@ -272,7 +274,9 @@ def search_university():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
-        if int(choice) < 1 or int(choice) > len(result_accounts):
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
             print("Invalid number.")
             return
         chosen_account = result_accounts[int(choice) - 1]
@@ -339,7 +343,9 @@ def search_major():
 
         # Let user chose and account, and send a request
         choice = input("Enter the number for a student to send a connection request: ")
-        if int(choice) < 1 or int(choice) > len(result_accounts):
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
             print("Invalid number.")
             return
         chosen_account = result_accounts[int(choice) - 1]
