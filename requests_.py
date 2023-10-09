@@ -123,7 +123,6 @@ def save_request(request):
         )
 
         connection.commit()
-        print("Connection request made!")
 
 
 # Error Handling
