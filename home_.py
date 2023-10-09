@@ -242,6 +242,7 @@ def search_lname():
             print("You are already connected with this person!")
         else:
             requests_.save_request(request)
+            print("Connection request made!")
 
 
 def search_university():
@@ -312,6 +313,7 @@ def search_university():
             print("You are already connected with this person!")
         else:
             requests_.save_request(request)
+            print("Connection request made!")
 
 def search_major():
     accounts = accounts_.load_accounts()
@@ -381,6 +383,7 @@ def search_major():
             print("You are already connected with this person!")
         else:
             requests_.save_request(request)
+            print("Connection request made!")
 
 
 
