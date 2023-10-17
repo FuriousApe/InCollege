@@ -375,6 +375,9 @@ def test_reject_connection_request(monkeypatch):
     "Major": "Computer Science"
     },
 ]))
+@patch('requests_.load_requests', MagicMock(returnValue=[]))
+@patch('requests_.save_request', MagicMock(returnValue=True))
+@patch('connections_.load_connections', MagicMock(returnValue=[]))
 def test_send_connection_request(monkeypatch):
     # Set input
     inputs = iter(['Doe', '1'])

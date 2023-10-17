@@ -14,6 +14,7 @@
 import sqlite3
 
 import config
+import profiles_
 
 from config import DBSettings
 from data_ import connect_to
@@ -47,10 +48,11 @@ from data_ import connect_to
                           #--------------------------#
 
                   # Adds a specified user's default settings #
+                       # Also adds empty profile fields #
 
 def initialize_user(username):
 
-# Create Default Settings
+# Create Default Settings / Empty Profile
 
     config.UserSettings = {
                             "Username": username,
@@ -60,6 +62,37 @@ def initialize_user(username):
                             "Ads On": True
                             }
 
+    config.UserProfile = {
+                            "Username": username,
+                            "Title": "",
+                            "About Me": "",
+
+                            "Job 1 : Title": "",
+                            "Job 1 : Employer": "",
+                            "Job 1 : Date Started": "",
+                            "Job 1 : Date Ended": "",
+                            "Job 1 : Location": "",
+                            "Job 1 : Description": "",
+
+                            "Job 2 : Title": "",
+                            "Job 2 : Employer": "",
+                            "Job 2 : Date Started": "",
+                            "Job 2 : Date Ended": "",
+                            "Job 2 : Location": "",
+                            "Job 2 : Description": "",
+
+                            "Job 3 : Title": "",
+                            "Job 3 : Employer": "",
+                            "Job 3 : Date Started": "",
+                            "Job 3 : Date Ended": "",
+                            "Job 3 : Location": "",
+                            "Job 3 : Description": "",
+
+                            "University": config.User['University'],
+                            "Major": config.User['Major'],
+                            "Years Attended": ""
+    }
+
 
 # Update Them
 
@@ -67,6 +100,9 @@ def initialize_user(username):
     config.Settings.append(config.UserSettings)
     save_all_settings()
 
+    config.Profiles = profiles_.load_profiles()
+    config.Profiles.append(config.UserProfile)
+    profiles_.save_profiles(config.Profiles)
 
 
                          #---------------------------#

@@ -22,6 +22,17 @@ User = None
 #           ['First Name': ],
 #           ['Last Name': ]
 
+UserProfile = None
+# Dictionary
+# Holds the user's profile info after login
+#
+#           ['Username': ],
+#           ['Title': ],
+#           ['About Me': ],
+#           ['Job 1 : Title': ],
+#           ...
+
+
 UserSettings = None
 # Dictionary
 # Holds the user's chosen settings after login
@@ -32,10 +43,13 @@ UserSettings = None
 #           ['SMS On': True],
 #           ['Ads On': True]
 
-
 Accounts = None
 # Dictionaries
 # Holds all users' personal info after load_accounts()
+
+Profiles = None
+# Dictionaries
+# Holds all users' profile info after load_profiles()
 
 Settings = None
 # Dictionaries
@@ -45,6 +59,13 @@ Jobs = None
 # Dictionaries
 # Holds all posted jobs after load_jobs()
 
+Requests = None
+# Dictionaries
+# Holds all requests after load_requests()
+
+Connections = None
+# Dictionaries
+# Holds all connections after load_connections()
 
 Connection = None
 # Occasionally used to hold active DB connection for error avoidance
@@ -55,7 +76,7 @@ PasswordMinLength = 8
 PasswordMaxLength = 12
 
 # Limitations
-MaxAccounts = 5
+MaxAccounts = 10
 MaxJobs = 5
 
 
@@ -65,8 +86,11 @@ MaxJobs = 5
 
 # Databases
 DBAccounts = 'student_accounts.db'
+DBProfiles = 'user_profiles.db'
 DBSettings = 'user_settings.db'
 DBJobs = 'job_postings.db'
+DBRequests = 'requests.db'
+DBConnections = 'connections.db'
 
 
                                  #--------------#
