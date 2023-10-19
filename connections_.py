@@ -14,9 +14,8 @@ import sqlite3
 
 import config
 import accounts_
-                                import profiles_
+import profiles_
 
-                                from config import DBRequests
 from data_ import connect_to
 
                            #-------------------------#
