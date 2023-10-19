@@ -319,6 +319,7 @@ def create_account():
 
     accounts = load_accounts()
     result = check_num_accounts(accounts)
+    profiles = profiles_.load_profiles()
 
     if not result:
         return
@@ -415,17 +416,56 @@ def create_account():
 
 # Saving to Database
 
-    accounts.append({
+    config.User = {
+                "Username": username,
+                "Password": password,
+                "First Name": first_name,
+                "Last Name": last_name,
+                "University": university,
+                "Major": major,
+                "Created a Profile": False
+                }
+
+
+    accounts.append(config.User)
+    save_accounts(accounts)
+
+    settings_.initialize_user(username)
+
+
+    config.UserProfile = {
                     "Username": username,
-                    "Password": password,
-                    "First Name": first_name,
-                    "Last Name": last_name,
+                    "Title": "",
+                    "About Me": "",
+
+                    "Job 1 : Title": "",
+                    "Job 1 : Employer": "",
+                    "Job 1 : Date Started": "",
+                    "Job 1 : Date Ended": "",
+                    "Job 1 : Location": "",
+                    "Job 1 : Description": "",
+
+                    "Job 2 : Title": "",
+                    "Job 2 : Employer": "",
+                    "Job 2 : Date Started": "",
+                    "Job 2 : Date Ended": "",
+                    "Job 2 : Location": "",
+                    "Job 2 : Description": "",
+
+                    "Job 3 : Title": "",
+                    "Job 3 : Employer": "",
+                    "Job 3 : Date Started": "",
+                    "Job 3 : Date Ended": "",
+                    "Job 3 : Location": "",
+                    "Job 3 : Description": "",
+
                     "University": university,
                     "Major": major,
-                    "Created a Profile": False
-                    })
-    save_accounts(accounts)
-    settings_.initialize_user(username)
+                    "Years Attended": ""
+                    }
+
+    profiles.append(config.UserProfile)
+    profiles_.save_profiles(profiles)
 
     print("")
     print("Account created successfully.")
@@ -443,7 +483,7 @@ def create_account():
 
         if creating_profile == 'Y':
             profiles_.edit_profile()
-            continue
+            break
 
         elif creating_profile == 'N':
             print("No problem! You can create your profile at any time from the Home Screen.")
@@ -551,6 +591,7 @@ def login():
 
             print(result)
             config.User = get_account(username)     # Load account details into config.py
+            config.UserProfile = profiles_.get_profile(username)
 
             settings_.load_user_settings()      # Do the same with their settings
             settings_.initialize_settings_database()

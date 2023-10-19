@@ -236,22 +236,22 @@ def view_connections():
         for connection in result_connections:
             if connection["Person1"] == config.User["Username"]:
                 for account in accounts:
-                    if account["Username"] == connection["Person1"] and account["Created a Profile"]:
+                    if account["Username"] == connection["Person2"] and account["Created a Profile"]:
                         print("[", str(count), "] ", connection["Person2"], "    View Profile [",str(count + len(result_connections)),"]")
                         count += 1
                         break
-                    elif account["Username"] == connection["Person1"]:
+                    elif account["Username"] == connection["Person2"]:
                         print("[", str(count), "] ", connection["Person2"])
                         count += 1
                         break
 
             elif connection["Person2"] == config.User["Username"]:
                 for account in accounts:
-                    if account["Username"] == connection["Person2"] and account["Created a Profile"]:
+                    if account["Username"] == connection["Person1"] and account["Created a Profile"]:
                         print("[", str(count), "] ", connection["Person1"], "    View Profile [",str(count + len(result_connections)),"]")
                         count += 1
                         break
-                    elif account["Username"] == connection["Person2"]:
+                    elif account["Username"] == connection["Person1"]:
                         print("[", str(count), "] ", connection["Person1"])
                         count += 1
                         break
@@ -314,6 +314,5 @@ def view_connections():
                 delete_connection(chosen_connection)
 
 # User wants to view a profile
-        if target_username:
+        elif target_username:
             profiles_.display_profile(target_username)
-

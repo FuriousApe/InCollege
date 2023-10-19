@@ -124,36 +124,36 @@ def create_profiles_table():
                 username VARCHAR(12) PRIMARY KEY,
                 title TEXT,
                 about TEXT,
-                
+
                 job_1_title TEXT,
                 job_1_employer TEXT,
                 job_1_date_started DATE,
                 job_1_date_ended DATE,
                 job_1_location TEXT,
                 job_1_description TEXT,
-                
+
                 job_2_title TEXT,
                 job_2_employer TEXT,
                 job_2_date_started DATE,
                 job_2_date_ended DATE,
                 job_2_location TEXT,
                 job_2_description TEXT,
-                
+
                 job_3_title TEXT,
                 job_3_employer TEXT,
                 job_3_date_started DATE,
                 job_3_date_ended DATE,
                 job_3_location TEXT,
                 job_3_description TEXT,
-                
+
                 college_name VARCHAR(100),
                 college_major VARCHAR(50),
                 college_years_attended TEXT,
-                
+
                 FOREIGN KEY (username) REFERENCES accounts(username),
                 FOREIGN KEY (college_name) REFERENCES accounts(university),
                 FOREIGN KEY (college_major) REFERENCES accounts(major),
-                
+
                 CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username),
                 CONSTRAINT fk_college_name FOREIGN KEY (college_name) REFERENCES accounts(university),
                 CONSTRAINT fk_college_major FOREIGN KEY (college_major) REFERENCES accounts(major)
@@ -318,6 +318,7 @@ def create_connections_table():
 def create_all_tables():
 
     create_accounts_table()
+    create_profiles_table()
     create_settings_table()
     create_job_table()
     create_requests_table()

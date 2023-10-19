@@ -69,31 +69,31 @@ def load_profiles():
             username,
             title,
             about,
-             
+
             job_1_title,
             job_1_employer,
             job_1_date_started,
             job_1_date_ended,
             job_1_location,
             job_1_description,
-            
+
             job_2_title,
             job_2_employer,
             job_2_date_started,
             job_2_date_ended,
             job_2_location,
             job_2_description,
-            
+
             job_3_title,
             job_3_employer,
             job_3_date_started,
             job_3_date_ended,
             job_3_location,
             job_3_description,
-            
+
             college_name,
             college_major,
-            college_years_attended,
+            college_years_attended
         FROM
              profiles;
         '''
@@ -197,31 +197,31 @@ def save_profiles(profiles):
             username,
             title,
             about,
-             
+
             job_1_title,
             job_1_employer,
             job_1_date_started,
             job_1_date_ended,
             job_1_location,
             job_1_description,
-            
+
             job_2_title,
             job_2_employer,
             job_2_date_started,
             job_2_date_ended,
             job_2_location,
             job_2_description,
-            
+
             job_3_title,
             job_3_employer,
             job_3_date_started,
             job_3_date_ended,
             job_3_location,
             job_3_description,
-            
+
             college_name,
             college_major,
-            college_years_attended,
+            college_years_attended
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         '''
@@ -234,36 +234,36 @@ def save_profiles(profiles):
         for profile in profiles:
             cursor.execute(query,
                          (
-                             profile["Username"],
-                             profile["Title"],
-                             profile["About Me"],
+                             profile['Username'],
+                             profile['Title'],
+                             profile['About Me'],
 
-                             profile["Job 1 : Title"],
-                             profile["Job 1 : Employer"],
-                             profile["Job 1 : Date Started"],
-                             profile["Job 1 : Date Ended"],
-                             profile["Job 1 : Location"],
-                             profile["Job 1 : Description"],
+                             profile['Job 1 : Title'],
+                             profile['Job 1 : Employer'],
+                             profile['Job 1 : Date Started'],
+                             profile['Job 1 : Date Ended'],
+                             profile['Job 1 : Location'],
+                             profile['Job 1 : Description'],
 
-                             profile["Job 2 : Title"],
-                             profile["Job 2 : Employer"],
-                             profile["Job 2 : Date Started"],
-                             profile["Job 2 : Date Ended"],
-                             profile["Job 2 : Location"],
-                             profile["Job 2 : Description"],
+                             profile['Job 2 : Title'],
+                             profile['Job 2 : Employer'],
+                             profile['Job 2 : Date Started'],
+                             profile['Job 2 : Date Ended'],
+                             profile['Job 2 : Location'],
+                             profile['Job 2 : Description'],
 
-                             profile["Job 3 : Title"],
-                             profile["Job 3 : Employer"],
-                             profile["Job 3 : Date Started"],
-                             profile["Job 3 : Date Ended"],
-                             profile["Job 3 : Location"],
-                             profile["Job 3 : Description"],
+                             profile['Job 3 : Title'],
+                             profile['Job 3 : Employer'],
+                             profile['Job 3 : Date Started'],
+                             profile['Job 3 : Date Ended'],
+                             profile['Job 3 : Location'],
+                             profile['Job 3 : Description'],
 
-                             profile["University"],
-                             profile["Major"],
-                             profile["Years Attended"]
+                             profile['University'],
+                             profile['Major'],
+                             profile['Years Attended']
                          )
-                           )
+                    )
 
 
 # Error Handling
@@ -288,11 +288,11 @@ def save_profiles(profiles):
 def print_section_info(title, info) :
 
     if info:
-        print(f"  {title}")
-        print("  " + "-" + len(title))
-        print(f"  {textwrap.fill(info, width=25)}\n")
+        print(f"  {title} : {textwrap.fill(info, width=25)}\n")
+        #print("  " + "-" * len(title))
+        #print(f"  {textwrap.fill(info, width=25)}\n")
     else:
-        print(f"  ( No {title} Info )\n")
+        print(f"  {title} : No info\n")
 
 
                            #-----------------------#
@@ -324,8 +324,11 @@ def display_profile(username) :
         title = profile.get('Title', '')
         about = profile.get('About Me', '')
 
-        college_name = profile.get('University', '')
-        college_major = profile.get('Major', '')
+        college_name = account.get('University', '')
+        config.UserProfile['University'] = college_name
+        college_major = account.get('Major', '')
+        config.UserProfile['Major'] = college_major
+
         college_years_attended = profile.get('Years Attended', '')
 
 
@@ -359,30 +362,41 @@ def display_profile(username) :
         for i in range(1,4):
 
             # '.get()' returns the 2nd argument if the 1st doesn't exist
-            job[0] = profile.get(f'Job {i} : Title', '')
-            job[1] = profile.get(f'Job {i} : Employer', '')
-            job[2] = profile.get(f'Job {i} : Date Started', '')
-            job[3] = profile.get(f'Job {i} : Date Ended', '')
-            job[4] = profile.get(f'Job {i} : Location', '')
-            job[5] = profile.get(f'Job {i} : Description', '')
-
+            job_info = {
+                f'Job {i} : Title': profile.get(f'Job {i} : Title', ''),
+                f'Job {i} : Employer' : profile.get(f'Job {i} : Employer', ''),
+                f'Job {i} : Date Started': profile.get(f'Job {i} : Date Started', ''),
+                f'Job {i} : Date Ended': profile.get(f'Job {i} : Date Ended', ''),
+                f'Job {i} : Location': profile.get(f'Job {i} : Location', ''),
+                f'Job {i} : Description': profile.get(f'Job {i} : Description', '')
+            }
 
 # If no content for any of the 3 jobs, don't display that job section
 # This is where the job info is displayed
 
-            for content in range(0,6):
-                if job[content]:
 
-                    print("")
-                    print("|::::::::::::::::::::::::::::|")
-                    print("")
-                    print_section_info(f"Job {i} Title", job[0])
-                    print_section_info(f"Job {i} Employer", job[1])
-                    print_section_info(f"Job {i} Date Started", job[2])
-                    print_section_info(f"Job {i} Date Ended", job[3])
-                    print_section_info(f"Job {i} Location", job[4])
-                    print_section_info(f"Job {i} Description", job[5])
-                    break
+            if any(job_info.values()):
+                print(f"\n|::::::::::::::::::::::::::::|")
+                print(f"|         Job {i} Info         |")
+                print(f"|::::::::::::::::::::::::::::|\n")
+
+                for field, value in job_info.items():
+                    if value:
+                        print_section_info(field, value)
+
+#            for content in range(0,6):
+#                if job[content]:
+#
+#                    print("")
+#                    print("|::::::::::::::::::::::::::::|")
+#                    print("")
+#                    print_section_info(f"Job {i} Title", job[0])
+#                    print_section_info(f"Job {i} Employer", job[1])
+#                    print_section_info(f"Job {i} Date Started", job[2])
+#                    print_section_info(f"Job {i} Date Ended", job[3])
+#                    print_section_info(f"Job {i} Location", job[4])
+#                    print_section_info(f"Job {i} Description", job[5])
+#                    break
 
 
 # If it's the user's profile (not a friend's), allow editing option
@@ -413,12 +427,11 @@ def edit_profile() :
 
 # If it's the user's first time, make note of it in User[]
 
-    if config.User['Created a Profile'] :
+    if config.User['Created a Profile']:
         print("")
-        print("::::::::::::::  Welcome back!  :::::::::::")
-        print(":::::::::::::::::::::::::::::::::::::::")
-        print("::  We kept everything just the  :::")
-        print("::::  way you left it!  :::::::::")
+        print(":::::::::  Welcome back!  :::::::::")
+        print("")
+
     else :
         config.User['Created a Profile'] = True
         print("")
@@ -524,9 +537,17 @@ def edit_ed() :
 
         if ed_choice == '': home_.linkster()
         elif ed_choice == '<': return
-        elif ed_choice == '1': config.User['University'], config.UserProfile['University'] = input("University:")
-        elif ed_choice == '2': config.User['Major'], config.UserProfile['Major'] = input("Major:")
-        elif ed_choice == '3': config.UserProfile['Years Attended'] = input("Years Attended:")
+        elif ed_choice == '1':
+            university = input("University:")
+            config.User['University'] = university
+            config.UserProfile['University'] = university
+        elif ed_choice == '2':
+            major = input("Major:")
+            config.User['Major'] = major
+            config.UserProfile['Major'] = major
+        elif ed_choice == '3':
+            years_attended = input("Years Attended:")
+            config.UserProfile['Years Attended'] = years_attended
 
         else: print("Invalid input. Please enter one of the available options.")
 
@@ -600,11 +621,17 @@ def save_profile(profile) :
     all_profiles = load_profiles()
 
     for a in all_profiles:
-        if a['Username'].strip().lower == profile['Username'].strip().lower:
-            for key, value in profile:
-                a[key] = profile[key]
+        if a['Username'].strip().lower() == profile["Username"].strip().lower():
+            all_profiles.remove(a)
+            all_profiles.append(profile)
+
+#    for a in all_profiles:
+#        if 'Username' in a and a['Username'].strip().lower() == profile['Username'].strip().lower():
+#            for key, value in profile.items():
+#                a[key] = value
 
     save_profiles(all_profiles)
+
 
 
 
@@ -630,7 +657,3 @@ def get_profile(username) :
         if profile_username == username: return profile
 
     return None
-
-
-
-
