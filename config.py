@@ -17,31 +17,46 @@ User = None
 # Dictionary
 # Holds the user's personal info after login
 #
-#           ['Username': ],
-#           ['Password': ],
-#           ['First Name': ],
-#           ['Last Name': ]
+#       CURRENT KEYS:       'Username' : String
+#                           'Password' : String
+#                           'First Name' : String
+#                           'Last Name' : String
+#                           'University' : String
+#                           'Major' : String
+#                           'Created a Profile' : Bool
+
 
 UserProfile = None
 # Dictionary
 # Holds the user's profile info after login
 #
-#           ['Username': ],
-#           ['Title': ],
-#           ['About Me': ],
-#           ['Job 1 : Title': ],
-#           ...
+#       CURRENT KEYS:       'Username' : String
+#                           'Title' : String
+#                           'About Me' : String
+#                           'University' : String
+#                           'Major' : String
+#                           'Years Attended' : String
+#                           'Job 1 : Title' : String
+#                           'Job 1 : Employer' : String
+#                           'Job 1 : Date Started' : String
+#                           'Job 1 : Date Ended' : String
+#                           'Job 1 : Location' : String
+#                           'Job 1 : Description' : String
+#                           ...
+#                           'Job 3 : Description' : String
+
 
 
 UserSettings = None
 # Dictionary
 # Holds the user's chosen settings after login
 #
-#           ['Username': ],
-#           ['Language': English],
-#           ['Email On': True],
-#           ['SMS On': True],
-#           ['Ads On': True]
+#       CURRENT KEYS:       'Username' : String
+#                           'Language' : String
+#                           'Email On' : Bool
+#                           'SMS On' : Bool
+#                           'Ads On' : Bool
+
 
 Accounts = None
 # Dictionaries

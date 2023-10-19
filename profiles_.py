@@ -303,13 +303,23 @@ def display_profile(username) :
 
     while True:
 
+
+# Check if the profile is the user's or a friend's
+
         if username == config.User['Username']:
             user_profile = True
             profile = config.UserProfile
+            account = config.User
         else:
             user_profile = False
             profile = get_profile(username)
+            account = accounts_.get_account(username)
 
+
+# Store information to be displayed
+
+        f_name = account['First Name']
+        l_name = account['Last Name']
 
         title = profile.get('Title', '')
         about = profile.get('About Me', '')
@@ -319,10 +329,12 @@ def display_profile(username) :
         college_years_attended = profile.get('Years Attended', '')
 
 
+
+
         print("")
-        print("|----------------------------|")
-        print("         Your Profile         ")
-        print("|----------------------------|")
+        print("|=============================")
+        print(f"  {f_name} {l_name}")
+        print("|-----------------------------")
         print("")
         print_section_info("Title", title)
         print("")
@@ -337,27 +349,49 @@ def display_profile(username) :
         print_section_info("Major", college_major)
         print_section_info("Years Attended", college_years_attended)
 
+
+
+# Create 'job' array, use it to check for content presence
+# This is where the job info is collected
+
+        job = []
+
         for i in range(1,4):
 
-            job_title = profile.get(f'Job {i} : Title', '')
-            job_employer = profile.get(f'Job {i} : Employer', '')
-            job_date_started = profile.get(f'Job {i} : Date Started', '')
-            job_date_ended = profile.get(f'Job {i} : Date Ended', '')
-            job_location = profile.get(f'Job {i} : Location', '')
-            job_description = profile.get(f'Job {i} : Description', '')
+            # '.get()' returns the 2nd argument if the 1st doesn't exist
+            job[0] = profile.get(f'Job {i} : Title', '')
+            job[1] = profile.get(f'Job {i} : Employer', '')
+            job[2] = profile.get(f'Job {i} : Date Started', '')
+            job[3] = profile.get(f'Job {i} : Date Ended', '')
+            job[4] = profile.get(f'Job {i} : Location', '')
+            job[5] = profile.get(f'Job {i} : Description', '')
 
-            print("")
-            print("|::::::::::::::::::::::::::::|")
-            print("")
-            print_section_info(f"Job {i} Title", job_title)
-            print_section_info(f"Job {i} Employer", job_employer)
-            print_section_info(f"Job {i} Date Started", job_date_started)
-            print_section_info(f"Job {i} Date Ended", job_date_ended)
-            print_section_info(f"Job {i} Location", job_location)
-            print_section_info(f"Job {i} Description", job_description)
+
+# If no content for any of the 3 jobs, don't display that job section
+# This is where the job info is displayed
+
+            for content in range(0,6):
+                if job[content]:
+
+                    print("")
+                    print("|::::::::::::::::::::::::::::|")
+                    print("")
+                    print_section_info(f"Job {i} Title", job[0])
+                    print_section_info(f"Job {i} Employer", job[1])
+                    print_section_info(f"Job {i} Date Started", job[2])
+                    print_section_info(f"Job {i} Date Ended", job[3])
+                    print_section_info(f"Job {i} Location", job[4])
+                    print_section_info(f"Job {i} Description", job[5])
+                    break
+
+
+# If it's the user's profile (not a friend's), allow editing option
 
         if user_profile: print("  [1] Edit Profile")
         print("  [<] Return")
+
+
+# Take input
 
         while True:
 
@@ -376,6 +410,24 @@ def display_profile(username) :
 
 def edit_profile() :
 
+
+# If it's the user's first time, make note of it in User[]
+
+    if config.User['Created a Profile'] :
+        print("")
+        print("::::::::::::::  Welcome back!  :::::::::::")
+        print(":::::::::::::::::::::::::::::::::::::::")
+        print("::  We kept everything just the  :::")
+        print("::::  way you left it!  :::::::::")
+    else :
+        config.User['Created a Profile'] = True
+        print("")
+        print("::::::::::  Profile Created  ::::::::::::")
+        print("")
+
+
+# Proceed with Profile editing
+
     while True:
 
         print("")
@@ -391,12 +443,16 @@ def edit_profile() :
         print("  [3] Job 3")
 
         print("")
-        print("  [<] Return")
+        print("  [<] Return        Display Profile [>]  ")
 
         edit_choice = input("Enter an option (or press Enter to access links): ")
 
+
+# Allow user to edit profile, display profile, go back, or access linkster()
+
         if edit_choice == '': home_.linkster()
         elif edit_choice == '<': return
+        elif edit_choice == '>': display_profile(config.User['Username'])
         elif edit_choice == 'i': edit_bio()
         elif edit_choice == 'e': edit_ed()
         elif (edit_choice == '1' or

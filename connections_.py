@@ -13,8 +13,10 @@
 import sqlite3
 
 import config
+import accounts_
+                                import profiles_
 
-from config import DBRequests
+                                from config import DBRequests
 from data_ import connect_to
 
                            #-------------------------#
@@ -213,6 +215,7 @@ def delete_connection(connect):
 def view_connections():
 
     connections = load_connections()
+    accounts = accounts_.load_accounts()
 
     # Load result_requests with connections that current user is a part of
     result_connections = []
@@ -233,34 +236,85 @@ def view_connections():
         count = 1
         for connection in result_connections:
             if connection["Person1"] == config.User["Username"]:
-                print("[", str(count), "] ", connection["Person2"])
-                count += 1
-            elif connection["Person2"] == config.User["Username"]:
-                print("[", str(count), "] ", connection["Person1"])
-                count += 1
+                for account in accounts:
+                    if account["Username"] == connection["Person1"] and account["Created a Profile"]:
+                        print("[", str(count), "] ", connection["Person2"], "    View Profile [",str(count + len(result_connections)),"]")
+                        count += 1
+                        break
+                    elif account["Username"] == connection["Person1"]:
+                        print("[", str(count), "] ", connection["Person2"])
+                        count += 1
+                        break
 
-        # Let user chose a connection to manage
+            elif connection["Person2"] == config.User["Username"]:
+                for account in accounts:
+                    if account["Username"] == connection["Person2"] and account["Created a Profile"]:
+                        print("[", str(count), "] ", connection["Person1"], "    View Profile [",str(count + len(result_connections)),"]")
+                        count += 1
+                        break
+                    elif account["Username"] == connection["Person2"]:
+                        print("[", str(count), "] ", connection["Person1"])
+                        count += 1
+                        break
+
+
+        # Let user choose a connection to manage
+
+        chosen_connection = None
+        target_username = None
+
         print("")
-        choice = input("Enter the number for a connection to manage: ")
+        choice = input("Enter the number for a connection to manage or profile to view: ")
+
+        # Set Bools for input range
+        in_connection_range = 1 <= int(choice) <= len(result_connections)
+        in_profile_range = len(result_connections) < int(choice) <= 2*len(result_connections)
+
         if not choice.isdigit():
             return
-        elif int(choice) < 1 or int(choice) > len(result_connections):
+
+        # If they want to manage a connection
+        elif in_connection_range:
+            chosen_connection = result_connections[int(choice) - 1]
+
+        # If they want to view a profile
+        elif in_profile_range:
+            relevant_connection = result_connections[(int(choice) - len(result_connections)) - 1]
+
+            if config.User["Username"] == relevant_connection["Person1"]:
+                target_username = relevant_connection["Person2"]
+            else:
+                target_username = relevant_connection["Person1"]
+
+            for account in accounts:
+                if account["Username"] == target_username and account["Created a Profile"] == False:
+                    print("Invalid number.")
+                    return
+
+        else:
             print("Invalid number.")
             return
-        chosen_connection = result_connections[int(choice) - 1]
-
-        print("")
-        print("Select an option to manage this connection:")
-        print("[ 1 ] Delete connection")
-        print("")
-        manage = input("Enter your selection: ")
-        if not manage.isdigit():
-            return
 
 
-        print("")
-        if int(manage) == 1:
-            print("Connection is deleted!")
+# User wants to manage a connection
+        if chosen_connection:
+            print("")
+            print("Select an option to manage this connection:")
+            print("[ 1 ] Delete connection")
+            print("")
+            manage = input("Enter your selection: ")
+            if not manage.isdigit():
+                return
 
-            # Delete connection
-            delete_connection(chosen_connection)
+
+            print("")
+            if int(manage) == 1:
+                print("Connection is deleted!")
+
+                # Delete connection
+                delete_connection(chosen_connection)
+
+# User wants to view a profile
+        if target_username:
+            profiles_.display_profile(target_username)
+

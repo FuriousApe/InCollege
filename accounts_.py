@@ -76,7 +76,8 @@ def load_accounts():
             first_name,
             last_name,
             university,
-            major
+            major,
+            created_a_profile
         FROM
             accounts;
     '''
@@ -93,8 +94,9 @@ def load_accounts():
                     "First Name": first_name,
                     "Last Name": last_name,
                     "University": university,
-                    "Major": major
-                    } for username, password, first_name, last_name, university, major in accounts_data]
+                    "Major": major,
+                    "Created a Profile": created_a_profile
+                    } for username, password, first_name, last_name, university, major, created_a_profile in accounts_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
@@ -139,9 +141,10 @@ def save_accounts(accounts):
             first_name,
             last_name,
             university,
-            major
+            major,
+            created_a_profile
         )
-        VALUES (?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?);
     '''
 
 
@@ -158,7 +161,8 @@ def save_accounts(accounts):
                     account['First Name'],
                     account['Last Name'],
                     account['University'],
-                    account['Major']
+                    account['Major'],
+                    account['Created a Profile']
                 )
             )
 
@@ -417,7 +421,8 @@ def create_account():
                     "First Name": first_name,
                     "Last Name": last_name,
                     "University": university,
-                    "Major": major
+                    "Major": major,
+                    "Created a Profile": False
                     })
     save_accounts(accounts)
     settings_.initialize_user(username)
@@ -473,7 +478,8 @@ def get_account(username):
                 first_name,
                 last_name,
                 university,
-                major
+                major,
+                created_a_profile
             FROM
                 accounts
             WHERE
@@ -486,14 +492,21 @@ def get_account(username):
         cursor.execute(query, (username,))
         user_data = cursor.fetchone()
 
-        config.User = {
+        account = {
                     "Username": user_data[0],
                     "Password": user_data[1],
                     "First Name": user_data[2],
                     "Last Name": user_data[3],
                     "University": user_data[4],
                     "Major": user_data[5],
+                    "Created a Profile": user_data[6]
                     }
+
+        if config.Connection:
+            config.Connection.commit()
+            config.Connection.close()
+
+            return account
 
 
 # Error Handling
@@ -501,15 +514,11 @@ def get_account(username):
     except sqlite3.Error as err:
         print("There was an error fetching your information from the database: ", err)
 
-
-# Close and Return
-
-    finally:
         if config.Connection:
             config.Connection.commit()
             config.Connection.close()
 
-            return config.User
+            return None
 
 
                                  #-------------#
@@ -574,6 +583,7 @@ def login():
 def logout():
 
     config.User = None
+    config.UserProfile = None
     config.UserSettings = None
 
 

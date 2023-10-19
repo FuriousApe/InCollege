@@ -433,7 +433,12 @@ def home():
         print("    [3] View Incoming Connection Requests")
         print("     [4] Show my Network")
         print("      [5] Learn a New Skill")
-        print("       [6] Edit my Profile")
+
+        if config.User['Created a Profile'] :
+            print("       [6] Edit my Profile")
+        else :
+            print("       [6] Create a Profile")
+
         print("        [7] Log Out")
         print("")
 
@@ -448,7 +453,7 @@ def home():
         elif main_choice == "3": requests_.view_requests()
         elif main_choice == "4": connections_.view_connections()
         elif main_choice == "5": skills_.skill_menu()
-        elif main_choice == "6": profiles_.create_profile(config.User['Username'])
+        elif main_choice == "6": profiles_.edit_profile()
 
         elif main_choice == "7":
             print("Logging out...")
