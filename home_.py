@@ -13,6 +13,7 @@ import config
 import connections_
 import policies_
 import jobs_
+import profiles_
 import requests_
 import skills_
 import accounts_
@@ -43,7 +44,7 @@ import accounts_
 ##################################  L O G I N  #################################
                                ###################
 
-              # A list of functions related to the log-in process #
+               # A list of functions related to the login process #
 
                              #---------------------#
 #----------------------------#    Success Story    #---------------------------#
@@ -173,6 +174,11 @@ def friend_connect():
     elif search_choice == "3":
         search_major()
 
+
+                           #------------------------#
+#--------------------------#    Search Last Name    #--------------------------#
+                           #------------------------#
+
 def search_lname():
 
     accounts = accounts_.load_accounts()
@@ -245,6 +251,10 @@ def search_lname():
             print("Connection request made!")
 
 
+                          #-------------------------#
+#-------------------------#    Search University    #--------------------------#
+                          #-------------------------#
+
 def search_university():
     accounts = accounts_.load_accounts()
 
@@ -314,6 +324,11 @@ def search_university():
         else:
             requests_.save_request(request)
             print("Connection request made!")
+
+
+                             #--------------------#
+#----------------------------#    Search Major    #----------------------------#
+                             #--------------------#
 
 def search_major():
     accounts = accounts_.load_accounts()
@@ -415,10 +430,16 @@ def home():
 
         print("  [1] Job Search / Internship")
         print("   [2] Find Someone You Know")
-        print("    [3] View incoming connection requests")
-        print("     [4] Show my network")
+        print("    [3] View Incoming Connection Requests")
+        print("     [4] Show my Network")
         print("      [5] Learn a New Skill")
-        print("       [6] Log Out")
+
+        if config.User['Created a Profile'] :
+            print("       [6] Edit my Profile")
+        else :
+            print("       [6] Create a Profile")
+
+        print("        [7] Log Out")
         print("")
 
 
@@ -432,8 +453,9 @@ def home():
         elif main_choice == "3": requests_.view_requests()
         elif main_choice == "4": connections_.view_connections()
         elif main_choice == "5": skills_.skill_menu()
+        elif main_choice == "6": profiles_.edit_profile()
 
-        elif main_choice == "6":
+        elif main_choice == "7":
             print("Logging out...")
             accounts_.logout()
             return
@@ -441,7 +463,7 @@ def home():
 # Error Handling
 
         else:
-            print("Invalid choice. Please select a number 1-6.")
+            print("Invalid choice. Please select a number 1-7.")
 
 
 
