@@ -1172,4 +1172,3 @@ def test_not_friends_no_profile(monkeypatch):
 
     # Test that there is not option to view profile
     assert "View Profile" not in actual
-
