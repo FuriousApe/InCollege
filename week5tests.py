@@ -4,11 +4,7 @@ import sys
 import pytest
 from mock import patch, MagicMock
 
-import accounts_
-import connections_
 import home_
-import config
-import requests_
 import profiles_
 
 @patch('accounts_.load_accounts', MagicMock(return_value=
