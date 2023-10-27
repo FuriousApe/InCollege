@@ -265,15 +265,15 @@ def view_connections():
         print("")
         choice = input("Enter the number for a connection to manage or profile to view: ")
 
-        if not choice.isdigit():
-            return
-
         # Set Bools for input range
         in_connection_range = 1 <= int(choice) <= len(result_connections)
         in_profile_range = len(result_connections) < int(choice) <= 2*len(result_connections)
 
+        if not choice.isdigit():
+            return
+
         # If they want to manage a connection
-        if in_connection_range:
+        elif in_connection_range:
             chosen_connection = result_connections[int(choice) - 1]
 
         # If they want to view a profile

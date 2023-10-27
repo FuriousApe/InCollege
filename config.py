@@ -92,7 +92,7 @@ PasswordMaxLength = 12
 
 # Limitations
 MaxAccounts = 10
-MaxJobs = 5
+MaxJobs = 10
 
 
                                #------------------#
@@ -104,6 +104,8 @@ DBAccounts = 'student_accounts.db'
 DBProfiles = 'user_profiles.db'
 DBSettings = 'user_settings.db'
 DBJobs = 'job_postings.db'
+DBSavedJobs = 'saved_jobs.db'
+DBApplications = 'applications.db'
 DBRequests = 'requests.db'
 DBConnections = 'connections.db'
 
