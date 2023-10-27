@@ -442,6 +442,8 @@ def home():
         print("        [7] Log Out")
         print("")
 
+        jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
+
 
 # User Chooses
 
@@ -463,7 +465,7 @@ def home():
 # Error Handling
 
         else:
-            print("Invalid choice. Please select a number 1-7.")
+            print("Invalid choice. Please select an available option.")
 
 
 

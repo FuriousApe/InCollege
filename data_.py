@@ -18,6 +18,8 @@ from config import (
     DBProfiles,
     DBSettings,
     DBJobs,
+    DBSavedJobs,
+    DBApplications,
     DBConnections,
     DBRequests
 )
@@ -32,11 +34,15 @@ from config import (
 #                             [ 2 ] Table - Accounts                           #
 #                             [ 3 ] Table - Profiles                           #
 #                             [ 4 ] Table - Settings                           #
-#                             [ 5 ] Table - Jobs                               #
-#                             [ 6 ] Table - Requests                           #
-#                             [ 7 ] Table - Connections                        #
 #                                                                              #
-#                             [ 8 ] Create All Tables                          #
+#                             [ 5 ] Table - Jobs                               #
+#                             [ 6 ] Table - Saved Jobs                         #
+#                             [ 7 ] Table - Applications                       #
+#                                                                              #
+#                             [ 8 ] Table - Requests                           #
+#                             [ 9 ] Table - Connections                        #
+#                                                                              #
+#                             [ 10 ] Create All Tables                         #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -58,6 +64,7 @@ def connect_to(database):
     try:
         connection = sqlite3.connect(database)
         cursor = connection.cursor()
+        connection.execute("PRAGMA foreign_keys = ON;")
         return connection, cursor
 
     except sqlite3.Error as err:
@@ -103,8 +110,7 @@ def create_accounts_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
 
 
                              #----------------------#
@@ -166,8 +172,7 @@ def create_profiles_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
 
 
                              #----------------------#
@@ -201,8 +206,7 @@ def create_settings_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
 
 
                                #-----------------#
@@ -228,8 +232,6 @@ def create_job_table():
                 salary DECIMAL(10, 2),
                 first_name VARCHAR(50),
                 last_name VARCHAR(50),
-                FOREIGN KEY (first_name) REFERENCES accounts(first_name),
-                FOREIGN KEY (last_name) REFERENCES accounts(last_name),
                 -- Add constraint names to avoid confusion
                 CONSTRAINT fk_first_name FOREIGN KEY (first_name) REFERENCES accounts(first_name),
                 CONSTRAINT fk_last_name FOREIGN KEY (last_name) REFERENCES accounts(last_name)
@@ -242,8 +244,81 @@ def create_job_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
+
+
+
+                           #------------------------#
+#--------------------------#    Saved Jobs Table    #--------------------------#
+                           #------------------------#
+
+def create_saved_jobs_table():
+
+    connection, cursor = connect_to(DBSavedJobs)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS saved_jobs (
+                student_username VARCHAR(12),
+                job_id INTEGER,
+                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username),
+                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+            );
+        ''')
+        connection.commit()
+
+
+    except sqlite3.Error as err:
+
+        print("There was an error creating the 'saved_jobs' table: ", err)
+
+
+    finally:
+
+        if connection: connection.close()
+
+
+
+                          #--------------------------#
+#-------------------------#    Applications Table    #-------------------------#
+                          #--------------------------#
+
+def create_applications_table():
+
+    connection, cursor = connect_to(DBApplications)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS applications (
+                application_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_username VARCHAR(12),
+                job_id INTEGER,
+                graduation_date DATE,
+                start_date DATE,
+                application_text TEXT,
+                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username),
+                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+            );
+        ''')
+        connection.commit()
+
+
+    except sqlite3.Error as err:
+
+        print("There was an error creating the 'applications' table: ", err)
+
+
+    finally:
+
+        if connection: connection.close()
+
+
 
                               # ---------------------#
 # ----------------------------#    Requests Table    #--------------------------#
@@ -275,8 +350,7 @@ def create_requests_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
 
                               # ------------------------#
 # ----------------------------#    Connections Table    #--------------------------#
@@ -308,8 +382,7 @@ def create_connections_table():
 
     finally:
 
-        if connection:
-            connection.close()
+        if connection: connection.close()
 
                              #---------------------#
 #----------------------------#    Create Tables    #---------------------------#
@@ -321,6 +394,8 @@ def create_all_tables():
     create_profiles_table()
     create_settings_table()
     create_job_table()
+    create_applications_table()
+    create_saved_jobs_table()
     create_requests_table()
     create_connections_table()
 
