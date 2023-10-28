@@ -37,6 +37,24 @@ from data_ import connect_to
 import sqlite3
 import re
 
+def add_job(username, job_id, sql_grad_date, sql_start_date, app_text):
+    connection, cursor = connect_to(DBApplications)
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            INSERT INTO applications (student_username, job_id, graduation_date, start_date, application_text)
+            VALUES (?, ?, ?, ?, ?);
+        ''', (username, job_id, sql_grad_date, sql_start_date, app_text))
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("Error applying for the job: ", err)
+
+    finally:
+        if connection: connection.close()
+
 def apply_for_job(username, job_id):
 
 
@@ -47,7 +65,7 @@ def apply_for_job(username, job_id):
 
     # Validate date input
     def convert_to_sql_date(date_str):
-        if re.match("^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/\d{4}$", date_str):
+        if re.match("^(0[1-9]|1[0-2])/(0[1-9]|[12][0-9]|3[01])/\\d{4}$", date_str):
             month, day, year = date_str.split('/')
             return f"{year}-{month}-{day}"
         return None
@@ -77,25 +95,9 @@ def apply_for_job(username, job_id):
         print("Your explanation is too short. Please provide more details.")
         app_text = input("Explain why you think you would be a good fit for this job: ")
 
-    connection, cursor = connect_to(DBApplications)
-    if connection is None:
-        return
+    add_job(username, job_id, sql_grad_date, sql_start_date, app_text)
 
-    try:
-        cursor.execute('''
-            INSERT INTO applications (student_username, job_id, graduation_date, start_date, application_text)
-            VALUES (?, ?, ?, ?, ?);
-        ''', (username, job_id, sql_grad_date, sql_start_date, app_text))
-        connection.commit()
-
-    except sqlite3.Error as err:
-        print("Error applying for the job: ", err)
-
-    finally:
-        if connection: connection.close()
-
-
-
+    print("Application completed!")
 
                            #------------------------#
 #--------------------------#    Check if Applied    #--------------------------#
@@ -137,7 +139,6 @@ def has_already_applied(student_username, job_id):
 
 
 def is_own_job(student_username, job_id):
-
     connection, cursor = connect_to(DBJobs)
     if connection is None:
         return False

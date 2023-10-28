@@ -106,6 +106,7 @@ DBSettings = 'user_settings.db'
 DBJobs = 'job_postings.db'
 DBSavedJobs = 'saved_jobs.db'
 DBApplications = 'applications.db'
+DBNotifications = 'notifications.db'
 DBRequests = 'requests.db'
 DBConnections = 'connections.db'
 

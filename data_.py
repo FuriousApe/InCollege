@@ -21,7 +21,7 @@ from config import (
     DBSavedJobs,
     DBApplications,
     DBConnections,
-    DBRequests
+    DBRequests, DBNotifications
 )
 
 
@@ -38,11 +38,12 @@ from config import (
 #                             [ 5 ] Table - Jobs                               #
 #                             [ 6 ] Table - Saved Jobs                         #
 #                             [ 7 ] Table - Applications                       #
+#                             [ 8 ] Table - Notifications                      #
 #                                                                              #
-#                             [ 8 ] Table - Requests                           #
-#                             [ 9 ] Table - Connections                        #
+#                             [ 9 ] Table - Requests                           #
+#                             [ 10 ] Table - Connections                       #
 #                                                                              #
-#                             [ 10 ] Create All Tables                         #
+#                             [ 11 ] Create All Tables                         #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -316,6 +317,36 @@ def create_applications_table():
 
         if connection: connection.close()
 
+                            # --------------------------#
+# --------------------------#    Notifications Table    #--------------------------#
+                            # --------------------------#
+
+def create_notifications_table():
+
+    connection, cursor = connect_to(DBNotifications)
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS notifications (
+                student_username VARCHAR(12),
+                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username)
+            );
+        ''')
+        connection.commit()
+
+
+    except sqlite3.Error as err:
+
+        print("There was an error creating the 'notifications' table: ", err)
+
+
+    finally:
+
+        if connection: connection.close()
+
 
 
                               # ---------------------#
@@ -393,6 +424,7 @@ def create_all_tables():
     create_settings_table()
     create_job_table()
     create_applications_table()
+    create_notifications_table()
     create_saved_jobs_table()
     create_requests_table()
     create_connections_table()

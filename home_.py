@@ -442,7 +442,7 @@ def home():
         print("        [7] Log Out")
         print("")
 
-        jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
+        #jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
 
 
 # User Chooses

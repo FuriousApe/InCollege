@@ -434,6 +434,14 @@ def edit_profile() :
 
     else :
         config.User['Created a Profile'] = True
+
+        # Save change
+        accounts = accounts_.load_accounts()
+        for account in accounts:
+            if account["Username"] == config.User["Username"]:
+                account['Created a Profile'] = True
+        accounts_.save_accounts(accounts)
+
         print("")
         print("::::::::::  Profile Created  ::::::::::::")
         print("")
@@ -539,10 +547,12 @@ def edit_ed() :
         elif ed_choice == '<': return
         elif ed_choice == '1':
             university = input("University:")
+            university = university.title()
             config.User['University'] = university
             config.UserProfile['University'] = university
         elif ed_choice == '2':
             major = input("Major:")
+            major = major.title()
             config.User['Major'] = major
             config.UserProfile['Major'] = major
         elif ed_choice == '3':
