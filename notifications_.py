@@ -39,7 +39,6 @@ from data_ import connect_to
 
 def load_notifications():
 
-
     # Connect to Database
 
     connection, cursor = connect_to(config.DBNotifications)
