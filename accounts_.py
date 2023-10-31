@@ -16,6 +16,7 @@ import sqlite3
 import config
 import home_
 import settings_
+import profiles_
 
 from config import DBAccounts
 from data_ import connect_to
@@ -31,8 +32,8 @@ from data_ import connect_to
 #                             [ 4 ] Create Username                            #
 #                             [ 5 ] Create Password                            #
 #                             [ 6 ] Check Number of Accounts                   #
-#                             [ 8 ] Validate Credentials                       #
-#                             [ 7 ] Create Account                             #
+#                             [ 7 ] Validate Credentials                       #
+#                             [ 8 ] Create Account                             #
 #                                                                              #
 #                             [ 9 ] Get Profile Info                           #
 #                             [ 10 ] Log In                                    #
@@ -73,7 +74,10 @@ def load_accounts():
             username,
             password,
             first_name,
-            last_name
+            last_name,
+            university,
+            major,
+            created_a_profile
         FROM
             accounts;
     '''
@@ -88,8 +92,11 @@ def load_accounts():
                     "Username": username,
                     "Password": password,
                     "First Name": first_name,
-                    "Last Name": last_name
-                    } for username, password, first_name, last_name in accounts_data]
+                    "Last Name": last_name,
+                    "University": university,
+                    "Major": major,
+                    "Created a Profile": created_a_profile
+                    } for username, password, first_name, last_name, university, major, created_a_profile in accounts_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
@@ -132,9 +139,12 @@ def save_accounts(accounts):
             username,
             password,
             first_name,
-            last_name
+            last_name,
+            university,
+            major,
+            created_a_profile
         )
-        VALUES (?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?);
     '''
 
 
@@ -149,7 +159,10 @@ def save_accounts(accounts):
                     account['Username'],
                     account['Password'],
                     account['First Name'],
-                    account['Last Name']
+                    account['Last Name'],
+                    account['University'],
+                    account['Major'],
+                    account['Created a Profile']
                 )
             )
 
@@ -306,6 +319,7 @@ def create_account():
 
     accounts = load_accounts()
     result = check_num_accounts(accounts)
+    profiles = profiles_.load_profiles()
 
     if not result:
         return
@@ -338,6 +352,30 @@ def create_account():
             print("")
             continue
         else:
+            break
+
+    while True:
+        university = input("University: ")
+
+        if not university:
+            print("")
+            print("You must enter your university to continue.")
+            print("")
+            continue
+        else:
+            university = ' '.join([word.capitalize() for word in university.split()])
+            break
+
+    while True:
+        major = input("Major: ")
+
+        if not major:
+            print("")
+            print("You must enter your major to continue.")
+            print("")
+            continue
+        else:
+            major = ' '.join([word.capitalize() for word in major.split()])
             break
 
 
@@ -378,28 +416,91 @@ def create_account():
 
 # Saving to Database
 
-    accounts.append({
-                    "Username": username,
-                    "Password": password,
-                    "First Name": first_name,
-                    "Last Name": last_name
-                    })
+    config.User = {
+                "Username": username,
+                "Password": password,
+                "First Name": first_name,
+                "Last Name": last_name,
+                "University": university,
+                "Major": major,
+                "Created a Profile": False
+                }
+
+
+    accounts.append(config.User)
     save_accounts(accounts)
+
     settings_.initialize_user(username)
+
+
+    config.UserProfile = {
+                    "Username": username,
+                    "Title": "",
+                    "About Me": "",
+
+                    "Job 1 : Title": "",
+                    "Job 1 : Employer": "",
+                    "Job 1 : Date Started": "",
+                    "Job 1 : Date Ended": "",
+                    "Job 1 : Location": "",
+                    "Job 1 : Description": "",
+
+                    "Job 2 : Title": "",
+                    "Job 2 : Employer": "",
+                    "Job 2 : Date Started": "",
+                    "Job 2 : Date Ended": "",
+                    "Job 2 : Location": "",
+                    "Job 2 : Description": "",
+
+                    "Job 3 : Title": "",
+                    "Job 3 : Employer": "",
+                    "Job 3 : Date Started": "",
+                    "Job 3 : Date Ended": "",
+                    "Job 3 : Location": "",
+                    "Job 3 : Description": "",
+
+                    "University": university,
+                    "Major": major,
+                    "Years Attended": ""
+                    }
+
+    profiles.append(config.UserProfile)
+    profiles_.save_profiles(profiles)
+
     print("")
     print("Account created successfully.")
     print("")
 
 
+# Profile Creation
+
+    while True:
+        print("")
+        creating_profile = input("Since you're here, would you like to create your profile? (Y/N):")
+        print("")
+
+        creating_profile.upper()
+
+        if creating_profile == 'Y':
+            profiles_.edit_profile()
+            break
+
+        elif creating_profile == 'N':
+            print("No problem! You can create your profile at any time from the Home Screen.")
+            break
+
+        else:
+            print("Invalid input. Please enter either Y (for yes) or N (for no).")
+
 
                            #------------------------#
-#--------------------------#    Get Profile Info    #--------------------------#
+#--------------------------#    Get Account Info    #--------------------------#
                            #------------------------#
 
       # Returns the username, password, first name, and last name as dict #
                 # Stores dict in global var 'User' during login() #
 
-def get_profile(username):
+def get_account(username):
 
     try:
         config.Connection, cursor = connect_to(DBAccounts)
@@ -415,7 +516,10 @@ def get_profile(username):
                 username,
                 password,
                 first_name,
-                last_name
+                last_name,
+                university,
+                major,
+                created_a_profile
             FROM
                 accounts
             WHERE
@@ -428,12 +532,21 @@ def get_profile(username):
         cursor.execute(query, (username,))
         user_data = cursor.fetchone()
 
-        config.User = {
+        account = {
                     "Username": user_data[0],
                     "Password": user_data[1],
                     "First Name": user_data[2],
-                    "Last Name": user_data[3]
+                    "Last Name": user_data[3],
+                    "University": user_data[4],
+                    "Major": user_data[5],
+                    "Created a Profile": user_data[6]
                     }
+
+        if config.Connection:
+            config.Connection.commit()
+            config.Connection.close()
+
+            return account
 
 
 # Error Handling
@@ -441,15 +554,11 @@ def get_profile(username):
     except sqlite3.Error as err:
         print("There was an error fetching your information from the database: ", err)
 
-
-# Close and Return
-
-    finally:
         if config.Connection:
             config.Connection.commit()
             config.Connection.close()
 
-            return config.User
+            return None
 
 
                                  #-------------#
@@ -481,9 +590,10 @@ def login():
         if result == "You have successfully logged in.":
 
             print(result)
-            config.User = get_profile(username)
+            config.User = get_account(username)     # Load account details into config.py
+            config.UserProfile = profiles_.get_profile(username)
 
-            settings_.load_user_settings()
+            settings_.load_user_settings()      # Do the same with their settings
             settings_.initialize_settings_database()
             home_.home()
 
@@ -504,9 +614,6 @@ def login():
                 return
 
 
-
-
-
                                  #--------------#
 #--------------------------------#    Logout    #------------------------------#
                                  #--------------#
@@ -517,6 +624,7 @@ def login():
 def logout():
 
     config.User = None
+    config.UserProfile = None
     config.UserSettings = None
 
 

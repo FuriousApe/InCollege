@@ -14,6 +14,7 @@
 import sqlite3
 
 import config
+import profiles_
 
 from config import DBSettings
 from data_ import connect_to
@@ -47,10 +48,12 @@ from data_ import connect_to
                           #--------------------------#
 
                   # Adds a specified user's default settings #
+                       # Also adds empty profile fields #
 
 def initialize_user(username):
 
-# Create Default Settings
+
+# Create Default Settings / Empty Profile
 
     config.UserSettings = {
                             "Username": username,
@@ -60,10 +63,10 @@ def initialize_user(username):
                             "Ads On": True
                             }
 
-
-# Update Them
+# Update Settings
 
     load_all_settings()
+    if config.Settings is None: config.Settings = []
     config.Settings.append(config.UserSettings)
     save_all_settings()
 

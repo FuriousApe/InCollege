@@ -15,7 +15,10 @@ import sqlite3
 
 import config
 
-from config import DBJobs
+import home_
+import applications_
+import notifications_
+from config import DBJobs, DBApplications
 from data_ import connect_to
 
                            #-------------------------#
@@ -26,8 +29,9 @@ from data_ import connect_to
 #                             [ 2 ] Load Jobs                                  #
 #                             [ 3 ] Count Jobs                                 #
 #                             [ 4 ] Post Job                                   #
-#                             [ 5 ] Save Job                                   #
-#                             [ 6 ] Job Menu                                   #
+#                             [ 5 ] Upload Job                                 #
+#                             [ 6 ] Delete Job                                 #
+#                             [ 7 ] Job Menu                                   #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -89,14 +93,13 @@ def load_jobs():
 
     query = '''
         SELECT
-            id,
+            job_id,
             job_title,
             description,
             location,
             employer,
             salary,
-            first_name,
-            last_name
+            username
         FROM
             jobs;
     '''
@@ -114,9 +117,8 @@ def load_jobs():
             "Location": location,
             "Employer": employer,
             "Salary": salary,
-            "First Name": first_name,
-            "Last Name": last_name
-        } for job_id, job_title, description, location, employer, salary, first_name, last_name in jobs_data]
+            "Username": username,
+        } for job_id, job_title, description, location, employer, salary, username in jobs_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
@@ -144,11 +146,12 @@ def load_jobs():
 def room_for_job():
 
     jobs = load_jobs()
-    job_count = len(jobs)
 
-    return job_count < config.MaxJobs
+    if jobs:
+        job_count = len(jobs)
+        return job_count < config.MaxJobs
 
-
+    else: return True
 
                                #----------------#
 #------------------------------#    Post Job    #------------------------------#
@@ -157,7 +160,7 @@ def room_for_job():
          # Gets information about job from user, saves it to database #
                        # One of the options in job_menu() #
 
-def post_job(first_name, last_name):
+def post_job(username):
 
 
     print("")
@@ -185,14 +188,14 @@ def post_job(first_name, last_name):
             "Location": location,
             "Employer": employer,
             "Salary": salary,
-            "First Name": first_name,
-            "Last Name": last_name
+            "Username": username
         }
 
 
 # Save to DB
 
-        save_job(job)
+        upload_job(job)
+        config.Jobs = load_jobs()
         print("Your job has been posted!")
 
 
@@ -207,14 +210,14 @@ def post_job(first_name, last_name):
 
 
 
-                               #----------------#
-#------------------------------#    Save Job    #------------------------------#
-                               #----------------#
+                              #------------------#
+#-----------------------------#    Upload Job    #-----------------------------#
+                              #------------------#
 
           # Takes a dict of job info, uploads it to the job database #
                    # Called during the post_job() function #
 
-def save_job(job):
+def upload_job(job):
 
 
 # Connect to DB
@@ -231,10 +234,9 @@ def save_job(job):
             location,
             employer,
             salary,
-            first_name,
-            last_name
+            username
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?);
         '''
 
 
@@ -248,8 +250,7 @@ def save_job(job):
                 job["Location"],
                 job["Employer"],
                 job["Salary"],
-                job["First Name"],
-                job["Last Name"]
+                job["Username"]
             )
         )
 
@@ -270,6 +271,215 @@ def save_job(job):
 
 
 
+
+
+
+                              #------------------#
+#-----------------------------#    Delete Job    #-----------------------------#
+                              #------------------#
+
+                  # Deletes a job posting from the database #
+                  # Must pass job poster's name as argument #
+
+
+def delete_job(job_id, job_poster_username):
+
+    # Connect to the 'jobs' database
+    connection_jobs, cursor_jobs = connect_to(DBJobs)
+    if connection_jobs is None:
+        return
+
+    # Connect to the 'notifications' database
+    connection_notifications, cursor_notifications = connect_to(config.DBNotifications)
+    if connection_notifications is None:
+        return
+
+    # Connect to the 'saved_jobs' database
+    connection_saved_jobs, cursor_saved_jobs = connect_to(config.DBSavedJobs)
+    if connection_saved_jobs is None:
+        return
+
+    try:
+        # Attach the 'applications' database
+        cursor_jobs.execute("ATTACH DATABASE ? AS apps_db", (DBApplications,))
+
+        # Find users who have applied for job
+        cursor_jobs.execute('''
+            SELECT student_username FROM apps_db.applications
+            WHERE job_id = ?;
+        ''', (job_id,))
+        usernames = cursor_jobs.fetchall()
+        connection_jobs.commit()
+
+        # Add notifications to notifications db
+        for username in usernames:
+            # To these Columns...
+
+            query = '''
+                    INSERT INTO notifications (
+                        student_username
+                    )
+                    VALUES (?);
+                    '''
+
+            # ...Insert this Data from Argument
+
+            try:
+                cursor_notifications.execute(query,
+                       (
+                           username
+                       )
+                 )
+                connection_notifications.commit()
+                connection_jobs.commit()
+            except sqlite3.Error as err:
+                print("There was an error creating job application deletion notifications: ", err)
+
+        # Remove application notifications from the 'applications' database
+        cursor_jobs.execute('''
+            DELETE FROM apps_db.applications
+            WHERE job_id = ?;
+        ''', (job_id,))
+        connection_jobs.commit()
+
+        # Remove saved jobs from the 'saved_jobs' database
+        cursor_saved_jobs.execute('''
+            DELETE FROM saved_jobs
+            WHERE job_id = ?;
+        ''', (job_id,))
+        connection_saved_jobs.commit()
+
+        # Delete the job from the 'jobs' table
+        cursor_jobs.execute('''
+            DELETE FROM jobs
+            WHERE job_id = ?;
+        ''', (job_id,))
+        connection_jobs.commit()
+
+        # Update the job list in your configuration
+        config.Jobs = []
+        config.Jobs = load_jobs()
+
+    except sqlite3.Error as err:
+        print("Error deleting job: ", err)
+
+
+    finally:
+        if connection_jobs: connection_jobs.close()
+        if connection_notifications: connection_notifications.close()
+        if connection_saved_jobs: connection_saved_jobs.close()
+
+
+
+
+
+                              #------------------#
+#-----------------------------#    Search Job    #-----------------------------#
+                              #------------------#
+
+        # Searches the database for a job posted by a certain person #
+                    # Returns a Bool based on existence #
+
+
+def search_job(title, username):
+
+
+# Connect to DB
+
+    connection, cursor = connect_to(DBJobs)
+
+
+# Query Definition
+
+    query = '''
+        SELECT
+            job_title,
+            first_name,
+            last_name
+        FROM
+            jobs
+        WHERE
+            job_title = ?
+            AND
+            username = ?;
+        '''
+
+
+# Query Execution
+
+    try:
+        cursor.execute(query,
+            (
+                title,
+                username
+            )
+        )
+
+        job_data = cursor.fetchone()
+        job_posting = [
+                        {
+                        "Job Title": job_title,
+                        "Username": username
+                        }
+                        for job_title, username in job_data
+                      ]
+
+        job_found = job_posting["Job Title"] == title
+
+        if job_found: return True
+        else: return False
+
+    except sqlite3.Error as err:
+        print("There was an error searching for the job in the database: ", err)
+
+
+# Close Connection
+
+    finally:
+        if connection: connection.commit(); connection.close()
+
+
+
+
+
+                         #-----------------------------#
+#------------------------#    Deletion Notification    #-----------------------#
+                         #-----------------------------#
+
+
+def notify_job_deletions_since_last_visit(username):
+
+    # Connect to the 'applications' database
+    connection_notifications, cursor_notifications = connect_to(config.DBNotifications)
+    if connection_notifications is None:
+        return
+
+    try:
+
+        usernames = notifications_.load_notifications()
+
+        if usernames:
+            if username in usernames[0]:
+                print("We're sorry. Jobs you applied for have been deleted since your last visit.")
+
+        cursor_notifications.execute('''
+            DELETE FROM notifications
+            WHERE student_username = ?
+        ''', (username,))
+        connection_notifications.commit()
+
+
+    except sqlite3.Error as err:
+        print("Error notifying about job deletions: ", err)
+
+
+    finally:
+        if connection_notifications: connection_notifications.close()
+
+
+
+
+
 #------------------------------#----------------#------------------------------#
 #------------------------------#    Job Menu    #------------------------------#
 #------------------------------#----------------#------------------------------#
@@ -279,35 +489,267 @@ def save_job(job):
 
 def job_menu():
 
+    config.Jobs = load_jobs()
 
-    print("")
-    print("|-----------------------------|")
-    print("    Job Search / Internship    ")
-    print("|-----------------------------|")
-    print("")
+    notify_job_deletions_since_last_visit(config.User["Username"])
 
-
-# Options
-
-    print("  [1] Find a Job")
-    print("   [2] Find an Internship")
-    print("    [3] Post a Job")
-    print("     [4] Return")
-    print("")
-
-    jobs_choice = input("Enter an option (1-4): ")
-    print("")
+    while True:
 
 
-# Outcomes
+        print("")
+        print("|-----------------------------|")
+        print("    Job Search / Internship    ")
+        print("|-----------------------------|")
+        print("")
 
-    if jobs_choice == "1": config.under_construction()
-    elif jobs_choice == "2": config.under_construction()
-    elif jobs_choice == "3": post_job(config.User["First Name"], config.User["Last Name"])
-    elif jobs_choice == "4": return
+        # Options
+        print("  [1] Find a Job")
+        print("   [2] Find an Internship")
+        print("    [3] Post a Job")
+        print("     [4] Saved Jobs")
+        print("      [5] Applied Jobs")
+        print("       [6] Return")
+        print("")
+
+        jobs_choice = input("Enter an option (or press Enter to access links): ")
+        print("")
+
+        # Outcomes
+        if jobs_choice == "": home_.linkster()
+        elif jobs_choice == "1": find_job()
+        elif jobs_choice == "2": config.under_construction()
+        elif jobs_choice == "3": post_job(config.User["Username"])
+        elif jobs_choice == "4": saved_jobs_menu()
+        elif jobs_choice == "5": applied_jobs_menu()
+        elif jobs_choice == "6": return
+
+        else:
+            print("Invalid choice. Please enter an available option.")
+
+
+
+
+#---------------------------#-------------------------#--------------------------#
+#---------------------------#    Applied Jobs Menu    #--------------------------#
+#---------------------------#-------------------------#--------------------------#
+
+def applied_jobs_menu():
+
+    while True:
+
+        print("")
+        print("|---------------------------|")
+        print("        Applied Jobs         ")
+        print("|---------------------------|")
+        print("")
+
+        applied_jobs = applications_.get_applied_jobs(config.User["Username"])
+
+        if not applied_jobs:
+            print("No applied jobs found.")
+            return
+
+        # Get applied job titles and IDs
+        applied_job_titles = [job['Job Title'] for job in applied_jobs]
+        applied_job_ids = [job['Id'] for job in applied_jobs]
+
+        # Display titles
+        for index, job_title in enumerate(applied_job_titles, start=1):
+            print(f"  [{index}] {job_title}")
+
+        print("  [<] Return")
+        print("")
+
+        applied_jobs_choice = input("Enter an option (or press Enter to access links): ")
+        print("")
+
+        if applied_jobs_choice == "": home_.linkster()
+        elif applied_jobs_choice == "<": return
+
+        elif applied_jobs_choice.isdigit():
+            selected_index = int(applied_jobs_choice) - 1
+            if 0 <= selected_index < len(applied_job_titles):
+                selected_job_title = applied_job_titles[selected_index]
+                selected_job_id = applied_job_ids[selected_index]
+                display_job_details(selected_job_title, selected_job_id)
+            else:
+                print("Invalid choice. Please select an available option.")
+
+        else: print("Invalid choice. Please select an available option.")
+
+# ---------------------------#-----------------------#--------------------------#
+# ---------------------------#    Saved Jobs Menu    #--------------------------#
+# ---------------------------#-----------------------#--------------------------#
+
+def saved_jobs_menu():
+
+    while True:
+
+        print("")
+        print("|-------------------------|")
+        print("        Saved Jobs         ")
+        print("|-------------------------|")
+        print("")
+
+        saved_jobs = applications_.get_saved_jobs(config.User["Username"])
+
+        if not saved_jobs:
+            print("No saved jobs found.")
+            return
+
+        # Get saved job titles and IDs
+        saved_job_titles = [job['Job Title'] for job in saved_jobs]
+        saved_job_ids = [job['Id'] for job in saved_jobs]
+
+        # Display titles
+        for index, job_title in enumerate(saved_job_titles, start=1):
+            print(f"  [{index}] {job_title}")
+
+        print("  [<] Return")
+        print("")
+
+        saved_jobs_choice = input("Enter an option (or press Enter to access links): ")
+        print("")
+
+        if saved_jobs_choice == "":
+            home_.linkster()
+        elif saved_jobs_choice == "<":
+            return
+
+        elif saved_jobs_choice.isdigit():
+            selected_index = int(saved_jobs_choice) - 1
+            if 0 <= selected_index < len(saved_job_titles):
+                selected_job_title = saved_job_titles[selected_index]
+                selected_job_id = saved_job_ids[selected_index]
+                display_job_details(selected_job_title, selected_job_id)
+            else:
+                print("Invalid choice. Please select an available option.")
+
+        else:
+            print("Invalid choice. Please select an available option.")
+
+
+
+
+                          #---------------------------#
+#-------------------------#    Display Job Details    #------------------------#
+                          #---------------------------#
+
+def display_job_details(job_title, job_id):
+
+    username = config.User["Username"]
+
+    for job in config.Jobs:
+        if job["Id"] == job_id:
+            job_details = job
+
+    if job_details:
+
+        print(f"Job Title: {job_title}")
+        print(f"Description: {job_details['Description']}")
+        print(f"Location: {job_details['Location']}")
+        print(f"Employer: {job_details['Employer']}")
+        print(f"Salary: {job_details['Salary']}")
+        print("")
+
+
+        saved_jobs = applications_.get_saved_jobs(username)
+        applied_jobs = applications_.get_applied_jobs(username)
+
+        is_saved = any(job['Job Title'] == job_title for job in saved_jobs)
+        is_applied = any(job['Job Title'] == job_title for job in applied_jobs)
+        is_mine = applications_.is_own_job(username, job_id)
+
+
+        # Options
+        print("Options:")
+
+        if is_saved: print("  [1] Unsave this Job")
+        else: print("  [1] Save this Job")
+
+        if is_applied: print("  ")
+        else: print("  [2] Apply for this Job")
+
+        if is_mine: print("  [3] Delete this Job")
+        else: print("  ")
+
+        print("  [<] Return")
+        print("")
+
+        job_details_choice = input("Enter an option (or press Enter to access links): ")
+        print("")
+
+
+        if job_details_choice == "": home_.linkster()
+
+        elif job_details_choice == "1":
+            if is_saved:
+                applications_.unsave_job(username, job_id)
+            else:
+                applications_.save_job(username, job_id)
+
+        elif job_details_choice == "2" and not is_applied:
+            applications_.apply_for_job(username, job_id)
+
+        elif job_details_choice == "3" and is_mine:
+            delete_job(job_id, username)
+            print("Job deleted successfully.")
+
+        elif job_details_choice == "<": return
+
+        else: print("Invalid choice. Please enter an available option.")
+
 
     else:
-        print("Invalid choice. Please select a number 1-4.")
+        print("Job details not found.")
+
+
+
+                               #----------------#
+#------------------------------#    Find Job    #------------------------------#
+                               #----------------#
+
+def find_job():
+
+    # List all job titles
+    job_titles = [job["Job Title"] for job in config.Jobs]
+
+
+    while True:
+
+        print("")
+        print("Jobs Available:")
+        for index, job_title in enumerate(job_titles, start=1):
+            print(f"  [{index}] {job_title}")
+
+        print("  [<] Return")
+        print("")
+
+        job_choice = input("Enter an option (or press Enter to access links): ")
+        print("")
+
+        if job_choice == "": home_.linkster()
+        elif job_choice == "<": return
+
+        elif job_choice.isdigit():
+
+            selected_index = int(job_choice) - 1
+
+            if 0 <= selected_index < len(job_titles):
+
+                selected_job_title = job_titles[selected_index]
+
+                for job in config.Jobs:
+
+                    if job["Job Title"] == selected_job_title:
+                        selected_job_id = job["Id"]
+
+                display_job_details(selected_job_title, selected_job_id)
+
+            else: print("Invalid choice. Please enter an available option.")
+
+        else: print("Invalid choice. Please enter an available option.")
+
 
 
 

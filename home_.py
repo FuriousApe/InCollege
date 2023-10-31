@@ -10,8 +10,11 @@
                              #--------------------#
 
 import config
+import connections_
 import policies_
 import jobs_
+import profiles_
+import requests_
 import skills_
 import accounts_
 
@@ -24,12 +27,15 @@ import accounts_
 #                                                                              #
 #                             [ 3 ] Friend Status                              #
 #                             [ 4 ] Connect to a friend                        #
+#                             [ 5 ] Search by last name                        #
+#                             [ 6 ] Search by university                       #
+#                             [ 7 ] Search by major                            #
 #                                                                              #
-#                             [ 5 ] Home Screen                                #
+#                             [ 8 ] Home Screen                                #
 #                                                                              #
-#                             [ 6 ] Useful Links                               #
-#                             [ 7 ] InCollege Important Links                  #
-#                             [ 8 ] General Links                              #
+#                             [ 9 ] Useful Links                               #
+#                             [ 10 ] InCollege Important Links                 #
+#                             [ 11 ] General Links                             #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -38,7 +44,7 @@ import accounts_
 ##################################  L O G I N  #################################
                                ###################
 
-              # A list of functions related to the log-in process #
+               # A list of functions related to the login process #
 
                              #---------------------#
 #----------------------------#    Success Story    #---------------------------#
@@ -151,48 +157,248 @@ def friend_connect():
     print("|-----------------------------|")
     print("")
 
-    print("Who would you like to find?")
+    print("How would you like to search?")
+    print("[ 1 ] Search by last name")
+    print("[ 2 ] Search by university")
+    print("[ 3 ] Search by major")
+
+    search_choice = input("Enter an option: ")
     print("")
 
+    # User Chooses
 
-# Get Input
+    if search_choice == "1":
+        search_lname()
+    elif search_choice == "2":
+        search_university()
+    elif search_choice == "3":
+        search_major()
 
-    first_name = input("First Name: ")
-    last_name = input("Last Name: ")
 
-    friend = accounts_.find_account(first_name, last_name)
+                           #------------------------#
+#--------------------------#    Search Last Name    #--------------------------#
+                           #------------------------#
 
+def search_lname():
 
-# If Friend 'is' User
+    accounts = accounts_.load_accounts()
 
-    if friend == config.User and friend is not None:
+    print("")
+    lname = input("Enter a last name to search by: ")
+    lname = lname.strip().lower()
+    print("")
+
+    # Load result_accounts with search results
+    result_accounts = []
+
+    for account in accounts:
+        if lname in account["Last Name"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    # Print results
+    if not result_accounts:
         print("")
-        print("Hey, that's you!")
-        print("")
-
-        return
-
-
-
-# Results
-
-    if friend:
-
-        print("")
-        print("Looks like they're in the system!")
-        print("")
-        print("Here's their contact info:")
-        print("--------------------------")
-
-        print(friend["First Name"], friend["Last Name"])
-        print("Username:", friend["Username"])
-        print("")
-
+        print("No accounts found.")
     else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
 
         print("")
-        print("This person is not in the system yet.")
+
+        # Let user chose and account, and send a request
+        choice = input("Enter the number for a student to send a connection request: ")
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Recipient": config.User["Username"],
+            "Requester": chosen_account["Username"]
+        }
+
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
+        requests = requests_.load_requests()
+        connections = connections_.load_connections()
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        elif connection in connections or reversed_connection in connections:
+            print("You are already connected with this person!")
+        else:
+            requests_.save_request(request)
+            print("Connection request made!")
+
+
+                          #-------------------------#
+#-------------------------#    Search University    #--------------------------#
+                          #-------------------------#
+
+def search_university():
+    accounts = accounts_.load_accounts()
+
+    print("")
+    university = input("Enter a university to search by: ")
+    university = university.strip().lower()
+    print("")
+
+    # Load result_accounts with search results
+    result_accounts = []
+
+    for account in accounts:
+        if university in account["University"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    # Print results
+    if not result_accounts:
         print("")
+        print("No accounts found.")
+    else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
+
+        print("")
+
+        # Let user chose and account, and send a request
+        choice = input("Enter the number for a student to send a connection request: ")
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Recipient": config.User["Username"],
+            "Requester": chosen_account["Username"]
+        }
+
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
+        requests = requests_.load_requests()
+        connections = connections_.load_connections()
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        elif connection in connections or reversed_connection in connections:
+            print("You are already connected with this person!")
+        else:
+            requests_.save_request(request)
+            print("Connection request made!")
+
+
+                             #--------------------#
+#----------------------------#    Search Major    #----------------------------#
+                             #--------------------#
+
+def search_major():
+    accounts = accounts_.load_accounts()
+
+    print("")
+    major = input("Enter a major to search by: ")
+    major = major.strip().lower()
+    print("")
+
+    # Load result_accounts with search results
+    result_accounts = []
+
+    for account in accounts:
+        if major in account["Major"].strip().lower() and account != config.User:
+            result_accounts.append(account)
+
+    # Print results
+    if not result_accounts:
+        print("")
+        print("No accounts found.")
+    else:
+        print("")
+        count = 1
+        for account in result_accounts:
+            print("[", str(count), "] ", account["First Name"], account["Last Name"])
+            count += 1
+
+        print("")
+
+        # Let user chose and account, and send a request
+        choice = input("Enter the number for a student to send a connection request: ")
+        if not choice.isdigit():
+            return
+        elif int(choice) < 1 or int(choice) > len(result_accounts):
+            print("Invalid number.")
+            return
+        chosen_account = result_accounts[int(choice) - 1]
+
+        request = {
+            "Requester": config.User["Username"],
+            "Recipient": chosen_account["Username"]
+        }
+
+        reversed_request = {
+            "Requester": chosen_account["Username"],
+            "Recipient": config.User["Username"]
+        }
+
+        connection = {
+            "Person1": config.User["Username"],
+            "Person2": chosen_account["Username"]
+        }
+
+        reversed_connection = {
+            "Person2": config.User["Username"],
+            "Person1": chosen_account["Username"]
+        }
+
+        # Check that a request has not already been sent, or that connection is not already made
+        requests = requests_.load_requests()
+        connections = connections_.load_connections()
+        if request in requests:
+            print("You have already sent a connection request to this person!")
+        elif reversed_request in requests:
+            print("This person has already sent a connection request to you!")
+        elif (connection in connections) or (reversed_connection in connections):
+            print("You are already connected with this person!")
+        else:
+            requests_.save_request(request)
+            print("Connection request made!")
 
 
 
@@ -224,9 +430,19 @@ def home():
 
         print("  [1] Job Search / Internship")
         print("   [2] Find Someone You Know")
-        print("    [3] Learn a New Skill")
-        print("     [4] Log Out")
+        print("    [3] View Incoming Connection Requests")
+        print("     [4] Show my Network")
+        print("      [5] Learn a New Skill")
+
+        if config.User['Created a Profile'] :
+            print("       [6] Edit my Profile")
+        else :
+            print("       [6] Create a Profile")
+
+        print("        [7] Log Out")
         print("")
+
+        #jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
 
 
 # User Chooses
@@ -236,9 +452,12 @@ def home():
         if main_choice == "": linkster()
         elif main_choice == "1": jobs_.job_menu()
         elif main_choice == "2": friend_connect()
-        elif main_choice == "3": skills_.skill_menu()
+        elif main_choice == "3": requests_.view_requests()
+        elif main_choice == "4": connections_.view_connections()
+        elif main_choice == "5": skills_.skill_menu()
+        elif main_choice == "6": profiles_.edit_profile()
 
-        elif main_choice == "4":
+        elif main_choice == "7":
             print("Logging out...")
             accounts_.logout()
             return
@@ -246,7 +465,7 @@ def home():
 # Error Handling
 
         else:
-            print("Invalid choice. Please select a number 1-4.")
+            print("Invalid choice. Please select an available option.")
 
 
 
