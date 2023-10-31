@@ -77,7 +77,8 @@ def load_accounts():
             last_name,
             university,
             major,
-            created_a_profile
+            created_a_profile,
+            plus
         FROM
             accounts;
     '''
@@ -95,8 +96,9 @@ def load_accounts():
                     "Last Name": last_name,
                     "University": university,
                     "Major": major,
-                    "Created a Profile": created_a_profile
-                    } for username, password, first_name, last_name, university, major, created_a_profile in accounts_data]
+                    "Created a Profile": created_a_profile,
+                    "Plus": plus
+                    } for username, password, first_name, last_name, university, major, created_a_profile, plus in accounts_data]
 
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
@@ -142,9 +144,10 @@ def save_accounts(accounts):
             last_name,
             university,
             major,
-            created_a_profile
+            created_a_profile,
+            plus
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     '''
 
 
@@ -162,7 +165,8 @@ def save_accounts(accounts):
                     account['Last Name'],
                     account['University'],
                     account['Major'],
-                    account['Created a Profile']
+                    account['Created a Profile'],
+                    account['Plus']
                 )
             )
 
@@ -413,6 +417,28 @@ def create_account():
         else:
             break
 
+# Choosing regular or plus account type
+
+    print("Would you like to create a plus account?")
+    print("Plus accounts cost a fee of $10 per month.")
+
+    while True:
+        plus = input("Enter Yes/No: ")
+        plus = plus.lower()
+
+        if plus != "yes" and plus != "no":
+            print("-------------------------------")
+            print("Invalid entry. Must be Yes/No.")
+            continue
+
+        else:
+            break
+
+    if plus == "yes":
+        plus = True
+    elif plus == "no":
+        plus = False
+
 
 # Saving to Database
 
@@ -423,7 +449,8 @@ def create_account():
                 "Last Name": last_name,
                 "University": university,
                 "Major": major,
-                "Created a Profile": False
+                "Created a Profile": False,
+                "Plus": plus
                 }
 
 
@@ -519,7 +546,8 @@ def get_account(username):
                 last_name,
                 university,
                 major,
-                created_a_profile
+                created_a_profile,
+                plus
             FROM
                 accounts
             WHERE
@@ -539,7 +567,8 @@ def get_account(username):
                     "Last Name": user_data[3],
                     "University": user_data[4],
                     "Major": user_data[5],
-                    "Created a Profile": user_data[6]
+                    "Created a Profile": user_data[6],
+                    "Plus": user_data[7]
                     }
 
         if config.Connection:
