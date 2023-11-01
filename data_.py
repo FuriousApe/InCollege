@@ -103,6 +103,7 @@ def create_accounts_table():
                 major VARCHAR(50),
                 created_a_profile BOOLEAN,
                 plus BOOLEAN
+
             );
         ''')
         connection.commit()

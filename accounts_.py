@@ -100,6 +100,7 @@ def load_accounts():
                     "Plus": plus
                     } for username, password, first_name, last_name, university, major, created_a_profile, plus in accounts_data]
 
+
     except sqlite3.Error as err:
         print("There was an error delivering the query: ", err)
 
@@ -569,6 +570,7 @@ def get_account(username):
                     "Major": user_data[5],
                     "Created a Profile": user_data[6],
                     "Plus": user_data[7]
+
                     }
 
         if config.Connection:
