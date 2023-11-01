@@ -101,7 +101,9 @@ def create_accounts_table():
                 last_name VARCHAR(50),
                 university VARCHAR(100),
                 major VARCHAR(50),
-                created_a_profile BOOLEAN
+                created_a_profile BOOLEAN,
+                plus BOOLEAN
+
             );
         ''')
         connection.commit()

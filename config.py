@@ -24,6 +24,7 @@ User = None
 #                           'University' : String
 #                           'Major' : String
 #                           'Created a Profile' : Bool
+#                           'Plus': Bool
 
 
 UserProfile = None
