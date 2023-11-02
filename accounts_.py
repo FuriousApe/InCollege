@@ -155,7 +155,7 @@ def create_account():
         choice.upper()
 
         if choice == 'Y':
-            profiles_.edit_profile()
+            profiles_.menu()
             break
 
         elif choice == 'N':

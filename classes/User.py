@@ -7,6 +7,7 @@ from classes.UserSettings import UserSettings
 from classes.UserProfile import UserProfile
 from classes.Request import Request
 from classes.Connection import Connection
+from classes.Message import Message
 
 
 class User:
@@ -21,6 +22,8 @@ class User:
         self.major = major
         self.created_a_profile = created_a_profile
         self.plus = plus
+        self.friends = [friend[0] for friend in self.get_friends()]
+        self.inbox = []
 
     def save(self):
         connection, cursor = connect_to_database()
@@ -260,49 +263,55 @@ class User:
         request = Request(None, self.username, recipient_username)
         return request.send()
 
-    def accept_request(self, request_id):
-        request = self.get_request_by_id(request_id)
+    def accept_request(self, requester):
+        request = self.get_request_of(requester) # Get request object
         if request:
-            return request.accept()
+            self.add_friend(requester) # Add both users to each other's friend list
+            self.save() # Save both users to database
+            requester.save()
+            return request.delete() # Delete the request
         return False
 
-    def reject_request(self, request_id):
-        request = self.get_request_by_id(request_id)
+    def reject_request(self, requester):
+        request = self.get_request_of(requester)
         if request:
-            return request.reject()
+            return request.delete()
         return False
 
     def pending_requests(self):
         return Request.get_pending_requests(self.username)
 
-    def get_request_by_id(self, request_id):
+    def get_request_of(self, requester):
         requests = self.pending_requests()
         for request in requests:
-            if request.request_id == request_id:
+            if request.requester == requester.username:
                 return request
         return None
 
 
     #::::::::::::::::::::::::::  C O N N E C T I O N S
 
+    # Saves connection to database
     def add_connection(self, other_username):
         connection = Connection(None, self.username, other_username)
         return connection.save()
 
+    # Deletes connection from database
     def remove_connection(self, other_username):
-        # Here we first find the connection, then delete it
         connections = self.get_all_connections()
         for conn in connections:
             if conn.person1 == other_username or conn.person2 == other_username:
                 return conn.delete()
         return False
 
+    # Returns all connections of self
     def get_all_connections(self):
         return Connection.get_all(self.username)
 
 
     #::::::::::::::::::::::::::  N O T I F I C A T I O N S
 
+    # Fetches all notifications for self
     def fetch_notifications(self):
         connection, cursor = connect_to_database()
         if connection is None: return []
@@ -318,6 +327,7 @@ class User:
         finally:
             if connection: connection.close()
 
+    # Deletes all notifications for self
     def delete_notifications(self):
         connection, cursor = connect_to_database()
         if connection is None: return False
@@ -335,6 +345,85 @@ class User:
             if connection: connection.close()
 
 
+    #::::::::::::::::::::::::::  M A I L  &  M E S S A G E S
+
+    # Takes object and 2 strings, sends message
+    def send_message(self, target, subject, content):
+        Message.save(self.username, target.username, subject, content)
+        print(f"Message sent to {target.username}!")
+
+    # Takes object, returns bool for friendship status
+    def is_friend_of(self, other_user):
+        return other_user.username in self.friends
+
+    # Displays user's inbox
+    def view_inbox(self):
+        self.inbox = Message.fetch_all(self.username)
+        if not self.inbox:
+            print("               Your inbox is empty.              ")
+            return
+
+        for index, message in enumerate(self.inbox, start=1):
+            status = "*" if message.is_read == False else " "
+            print(f" {status} [{index}] From: {message.sender} | Subject: {message.subject}")
+
+    # Takes object, formats & displays it
+    def read_message(self, message):
+        print(f"\nFrom: {message.sender}")
+        print(f"Subject: {message.subject}")
+        print("----------------------")
+        print(message.body)
+        print("----------------------\n")
+        message.read()
+        choice = input("Do you want to delete this message? (Y/N) ").upper()
+        if choice == "Y":
+            message.delete()
+            self.inbox.remove(message)
+            print("\nMessage deleted.\n")
+
+    # Takes object, connects self and friend
+    def add_friend(self, friend):
+        if not self.is_friend_of(friend):
+            self.add_connection(friend.username)
+            self.friends = [friend[0] for friend in self.get_friends()]
+            friend.friends = [user[0] for user in friend.get_friends()]
+
+    # Prints usernames of friend list
+    def view_friends(self):
+        if not self.friends:
+            print("You have no friends added.")
+            return
+        for index, friend in enumerate(self.friends, start=1):
+            print(f"{index}. {friend}")
+
+    @classmethod
+    # Returns all usernames in alphabetical order
+    def all_usernames(cls):
+
+        connection, cursor = connect_to_database()
+        if connection is None: return []
+
+        try:
+            cursor.execute("SELECT username FROM users ORDER BY username ASC")
+            usernames = cursor.fetchall()
+            # Extract usernames from the tuples returned by fetchall
+            return [username[0] for username in usernames]
+
+        except sqlite3.Error as error:
+            print("Error while fetching usernames: ", error)
+            return []
+
+        finally:
+            if connection: connection.close()
+
+
+    # Notifies of unread message(s)
+    def receive_notifications(self):
+        unread_msgs = [msg for msg in self.inbox if msg.is_read == False]
+        if unread_msgs:
+            print("\n|::::::::::::::::::::::::::::::::::::::::::::::::")
+            print(f"  You have {len(unread_msgs)} unread messages!")
+            print("|::::::::::::::::::::::::::::::::::::::::::::::::\n")
 
 
 # End of file

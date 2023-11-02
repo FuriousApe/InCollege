@@ -34,7 +34,7 @@ import profiles_
 
           # Allows a user to view their connections, and delete them.
 
-def view_connections():
+def menu():
 
     friends = config.user.get_friends()
 

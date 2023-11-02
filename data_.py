@@ -101,7 +101,6 @@ def create_users_table():
         print("There was an error creating the 'users' table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -157,7 +156,6 @@ def create_profiles_table():
         print("There was an error creating the profiles table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -190,7 +188,6 @@ def create_settings_table():
         print("There was an error creating the settings table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -225,7 +222,6 @@ def create_job_table():
         print("There was an error creating the 'jobs' table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -252,14 +248,10 @@ def create_saved_jobs_table():
         ''')
         connection.commit()
 
-
     except sqlite3.Error as err:
-
         print("There was an error creating the 'saved_jobs' table: ", err)
 
-
     finally:
-
         if connection: connection.close()
 
 
@@ -290,14 +282,10 @@ def create_applications_table():
         ''')
         connection.commit()
 
-
     except sqlite3.Error as err:
-
         print("There was an error creating the 'applications' table: ", err)
 
-
     finally:
-
         if connection: connection.close()
 
                             # --------------------------#
@@ -388,8 +376,44 @@ def create_connections_table():
         print("There was an error creating the connections table: ", err)
 
     finally:
-
         if connection: connection.close()
+
+
+
+
+                            #----------------------#
+#---------------------------#    Messages Table    #---------------------------#
+                            #----------------------#
+
+def create_messages_table():
+
+    connection, cursor = connect_to_database()
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender VARCHAR(12),
+                receiver VARCHAR(12),
+                subject TEXT,
+                body TEXT,
+                is_read BOOL,
+                CONSTRAINT fk_sender FOREIGN KEY (sender) REFERENCES users(username),
+                CONSTRAINT fk_receiver FOREIGN KEY (receiver) REFERENCES users(username)
+            );
+        ''')
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("There was an error creating the 'messages' table: ", err)
+
+    finally:
+        if connection: connection.close()
+
+
 
                              #---------------------#
 #----------------------------#    Create Tables    #---------------------------#
@@ -406,6 +430,7 @@ def create_all_tables():
     create_saved_jobs_table()
     create_requests_table()
     create_connections_table()
+    create_messages_table()
 
 
 

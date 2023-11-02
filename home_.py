@@ -17,6 +17,7 @@ import profiles_
 import requests_
 import skills_
 import accounts_
+import mail_
 
 from classes.User import User
 
@@ -198,22 +199,19 @@ def search_by(attribute):
 
         request = [user.username, target.username]
         reversed_request = [target.username, user.username]
-        connection = [user.username, target.username]
-        reversed_connection = [target.username, user.username]
 
         # Check existing requests/connections
         requests = user.pending_requests()
         requests_usernames = [(req.requester, username) for req in requests]
 
-        connections = user.get_all_connections()
-        connections_usernames = [(conn.person1, conn.person2) for conn in connections]
+        friends = user.friends
 
         if request in requests_usernames:
             print("You have already sent a connection request to this person!")
         elif reversed_request in requests_usernames:
             print("This person has already sent a connection request to you!")
-        elif connection in connections_usernames or reversed_connection in connections_usernames:
-            print("You are already connected with this person!")
+        elif target.username in friends:
+            print("You are already friends with this person!")
         else:
             user.send_request(target.username)
             print("Connection request made!")
@@ -255,24 +253,25 @@ def home():
             print("       [6] Edit my Profile")
         else :
             print("       [6] Create a Profile")
-
-        print("        [7] Log Out")
+        print("        [7] Inbox")
+        print("         [8] Log Out")
         print("")
 
-        #jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
+        user.receive_notifications()
 
         # User Chooses
-        main_choice = input("Enter an option (or press Enter to access links): ")
+        choice = input("Enter an option (or press Enter to access links): ")
 
-        if main_choice == "": linkster()
-        elif main_choice == "1": jobs_.job_menu()
-        elif main_choice == "2": friend_connect()
-        elif main_choice == "3": requests_.view_requests()
-        elif main_choice == "4": connections_.view_connections()
-        elif main_choice == "5": skills_.skill_menu()
-        elif main_choice == "6": profiles_.edit_profile()
-
-        elif main_choice == "7":
+        # The 'menu()' of each branch is the entry point of each module
+        if choice == "": linkster()
+        elif choice == "1": jobs_.menu()
+        elif choice == "2": friend_connect()
+        elif choice == "3": requests_.menu()
+        elif choice == "4": connections_.menu()
+        elif choice == "5": skills_.menu()
+        elif choice == "6": profiles_.menu()
+        elif choice == "7": mail_.menu()
+        elif choice == "8":
             print("Logging out...")
             accounts_.logout()
             return

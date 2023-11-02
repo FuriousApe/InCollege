@@ -139,7 +139,7 @@ def post_job_menu():
        # Provides option to find a job, find an internship, or post a job #
                       # One of the paths from home() #
 
-def job_menu():
+def menu():
 
     user = config.user
 

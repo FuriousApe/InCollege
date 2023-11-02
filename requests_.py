@@ -15,6 +15,8 @@ import sqlite3
 import config
 import connections_
 
+from classes.User import User
+
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
@@ -34,7 +36,7 @@ import connections_
 
      # Allows a user to view and accept their incoming connection requests #
 
-def view_requests():
+def menu():
 
     user = config.user
     pending = user.pending_requests()
@@ -59,31 +61,26 @@ def view_requests():
             return
 
         request = pending[int(choice) - 1]
-        request_id = request.request_id
+        friend = User.fetch(request.requester)
 
-        print("")
-        print("Choose whether to accept or reject this request:")
+        print("\nChoose whether to accept or reject this request:")
         print("[ 1 ] Accept")
         print("[ 2 ] Reject")
-        choice = input("Enter your selection: ")
-        if not choice.isdigit():
-            return
 
-        print("")
+        choice = input("\nEnter your selection: ")
+        if not choice.isdigit(): return
+
         if int(choice) == 1:
 
-            # Delete request
-            request.accept()
-            # Create connection
-            user.add_connection(request.requester)
+            user.accept_request(friend)
 
-            print(request.requester, "is now your friend!")
+            print(friend.username, "is now your friend!")
 
 
         elif int(choice) == 2:
 
-            # Delete request
-            request.reject()
+            user.reject_request(friend)
+
             print("Request is deleted!")
 
 

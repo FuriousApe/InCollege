@@ -135,7 +135,7 @@ def display_profile(username):
             elif choice == '<':
                 return
             elif user_profile and choice == '1':
-                edit_profile()
+                menu()
                 break
             else:
                 print("Invalid input. Please enter one of the available options.")
@@ -146,7 +146,7 @@ def display_profile(username):
 #----------------------------#    Edit Profile    #----------------------------#
                              #--------------------#
 
-def edit_profile() :
+def menu() :
 
     user = config.user
 

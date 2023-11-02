@@ -30,26 +30,7 @@ class Request:
         finally:
             if connection: connection.close()
 
-    def accept(self):
-
-        if not self.request_id: return False
-
-        connection, cursor = connect_to_database()
-        if connection is None: return False
-
-        try:
-            cursor.execute('DELETE FROM requests WHERE request_id = ?', (self.request_id,))
-            connection.commit()
-            return True
-
-        except sqlite3.Error as err:
-            print("Error accepting friend request: ", err)
-            return False
-
-        finally:
-            if connection: connection.close()
-
-    def reject(self):
+    def delete(self):
 
         if not self.request_id: return False
 
