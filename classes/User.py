@@ -350,7 +350,6 @@ class User:
     # Takes object and 2 strings, sends message
     def send_message(self, target, subject, content):
         Message.save(self.username, target.username, subject, content)
-        print(f"Message sent to {target.username}!")
 
     # Takes object, returns bool for friendship status
     def is_friend_of(self, other_user):

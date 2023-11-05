@@ -75,6 +75,7 @@ def menu():
                         subject = "Re: " + message.subject
                         content = input("Enter your reply: ")
                         user.send_message(them, subject, content)
+                        print("Message sent!")
 
             except ValueError:
                 print("Invalid choice.")
@@ -95,6 +96,7 @@ def menu():
                 subject = input("Enter the subject: ")
                 body = input("Enter the content: ")
                 user.send_message(them, subject, body)
+                print("Message sent!")
 
             else: print("Only Plus members can send messages to non-friends!")
 
