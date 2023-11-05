@@ -17,6 +17,9 @@ import profiles_
 import requests_
 import skills_
 import accounts_
+import mail_
+
+from classes.User import User
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
@@ -27,9 +30,7 @@ import accounts_
 #                                                                              #
 #                             [ 3 ] Friend Status                              #
 #                             [ 4 ] Connect to a friend                        #
-#                             [ 5 ] Search by last name                        #
-#                             [ 6 ] Search by university                       #
-#                             [ 7 ] Search by major                            #
+#                             [ 5 ] Search By                                  #
 #                                                                              #
 #                             [ 8 ] Home Screen                                #
 #                                                                              #
@@ -51,10 +52,8 @@ import accounts_
                              #---------------------#
 
                       # Displays a student success story #
-                    # Called at beginning of login_menu() *
 
 def show_success_story():
-
 
     print("")
     print("|----------------------------|")
@@ -70,16 +69,13 @@ def show_success_story():
     print("                     - Jane Withers Smith")
 
 
-
                               #-------------------#
 #-----------------------------#    Watch Video    #----------------------------#
                               #-------------------#
 
                     # Menu for watching a video testimonial #
-                     # One of the paths from login_menu() #
 
 def watch_video():
-
 
     print("")
     print("|---------------------------------|")
@@ -106,9 +102,7 @@ def watch_video():
     elif vid_choice == "2":
         return
 
-    else:
-        print("Your chosen input is invalid. Please select a number 1 or 2.")
-
+    else: print("Your chosen input is invalid. Please select a number 1 or 2.")
 
 
                              #---------------------#
@@ -116,29 +110,26 @@ def watch_video():
                              #---------------------#
 
          # Returns account status of user-specified first and last name #
-                     # One of the paths from login_menu() #
 
 def friend_status():
-
 
     print("")
     print("Who would you like to find?: ")
     print("")
 
-
-# Get Input
-
+    # Get Input
     first_name = input("First Name: ").strip().lower()
     last_name = input("Last Name: ").strip().lower()
 
-    friend = accounts_.find_account(first_name, last_name)
+    # Check
+    list = User.get_users_by_attribute(first_name=first_name, last_name=last_name)
+    friend = list[0] if list else None
 
-
-# Print Result
-
+    # Print Result
     if friend: print("They are a part of the InCollege system.")
     else: print("They are not a part of the InCollege system yet.")
 
+    friend = None
 
 
                           #-------------------------#
@@ -146,10 +137,8 @@ def friend_status():
                           #-------------------------#
 
               # Allows user to connect to a friend in the system #
-                      # One of the paths from home() #
 
 def friend_connect():
-
 
     print("")
     print("|-----------------------------|")
@@ -167,239 +156,65 @@ def friend_connect():
 
     # User Chooses
 
-    if search_choice == "1":
-        search_lname()
-    elif search_choice == "2":
-        search_university()
-    elif search_choice == "3":
-        search_major()
+    if search_choice == "1": search_by('last_name')
+    elif search_choice == "2": search_by('university')
+    elif search_choice == "3": search_by('major')
 
 
-                           #------------------------#
-#--------------------------#    Search Last Name    #--------------------------#
-                           #------------------------#
+                          #---------------------------#
+#-------------------------#    Search By Attribute    #------------------------#
+                          #---------------------------#
 
-def search_lname():
+def search_by(attribute):
 
-    accounts = accounts_.load_accounts()
+    user = config.user
 
-    print("")
-    lname = input("Enter a last name to search by: ")
-    lname = lname.strip().lower()
+    attribute_value = input(f"\nEnter a {attribute} to search by: ")
+    attribute_value = attribute_value.strip().lower()
     print("")
 
-    # Load result_accounts with search results
-    result_accounts = []
-
-    for account in accounts:
-        if lname in account["Last Name"].strip().lower() and account != config.User:
-            result_accounts.append(account)
+    # Using dictionary unpacking to provide the attribute dynamically
+    results = User.get_users_by_attribute(**{attribute: attribute_value})
+    results = [account for account in results if account.username != user.username]
 
     # Print results
-    if not result_accounts:
-        print("")
-        print("No accounts found.")
+    if not results:
+        print("\nNo accounts found.")
     else:
         print("")
-        count = 1
-        for account in result_accounts:
-            print("[", str(count), "] ", account["First Name"], account["Last Name"])
-            count += 1
+        for count, account in enumerate(results, 1):
+            print(f"[{count}] {account.first_name} {account.last_name}")
 
         print("")
 
-        # Let user chose and account, and send a request
-        choice = input("Enter the number for a student to send a connection request: ")
+        choice = input(f"Enter the number for a student to send a connection request: ")
+
         if not choice.isdigit():
             return
-        elif int(choice) < 1 or int(choice) > len(result_accounts):
+        elif int(choice) < 1 or int(choice) > len(results):
             print("Invalid number.")
             return
-        chosen_account = result_accounts[int(choice) - 1]
 
-        request = {
-            "Requester": config.User["Username"],
-            "Recipient": chosen_account["Username"]
-        }
+        target = results[int(choice) - 1]
 
-        reversed_request = {
-            "Recipient": config.User["Username"],
-            "Requester": chosen_account["Username"]
-        }
+        request = [user.username, target.username]
+        reversed_request = [target.username, user.username]
 
-        connection = {
-            "Person1": config.User["Username"],
-            "Person2": chosen_account["Username"]
-        }
+        # Check existing requests/connections
+        requests = user.pending_requests()
+        requests_usernames = [(req.requester, username) for req in requests]
 
-        reversed_connection = {
-            "Person2": config.User["Username"],
-            "Person1": chosen_account["Username"]
-        }
+        friends = user.friends
 
-        # Check that a request has not already been sent, or that connection is not already made
-        requests = requests_.load_requests()
-        connections = connections_.load_connections()
-        if request in requests:
+        if request in requests_usernames:
             print("You have already sent a connection request to this person!")
-        elif reversed_request in requests:
+        elif reversed_request in requests_usernames:
             print("This person has already sent a connection request to you!")
-        elif connection in connections or reversed_connection in connections:
-            print("You are already connected with this person!")
+        elif target.username in friends:
+            print("You are already friends with this person!")
         else:
-            requests_.save_request(request)
+            user.send_request(target.username)
             print("Connection request made!")
-
-
-                          #-------------------------#
-#-------------------------#    Search University    #--------------------------#
-                          #-------------------------#
-
-def search_university():
-    accounts = accounts_.load_accounts()
-
-    print("")
-    university = input("Enter a university to search by: ")
-    university = university.strip().lower()
-    print("")
-
-    # Load result_accounts with search results
-    result_accounts = []
-
-    for account in accounts:
-        if university in account["University"].strip().lower() and account != config.User:
-            result_accounts.append(account)
-
-    # Print results
-    if not result_accounts:
-        print("")
-        print("No accounts found.")
-    else:
-        print("")
-        count = 1
-        for account in result_accounts:
-            print("[", str(count), "] ", account["First Name"], account["Last Name"])
-            count += 1
-
-        print("")
-
-        # Let user chose and account, and send a request
-        choice = input("Enter the number for a student to send a connection request: ")
-        if not choice.isdigit():
-            return
-        elif int(choice) < 1 or int(choice) > len(result_accounts):
-            print("Invalid number.")
-            return
-        chosen_account = result_accounts[int(choice) - 1]
-
-        request = {
-            "Requester": config.User["Username"],
-            "Recipient": chosen_account["Username"]
-        }
-
-        reversed_request = {
-            "Recipient": config.User["Username"],
-            "Requester": chosen_account["Username"]
-        }
-
-        connection = {
-            "Person1": config.User["Username"],
-            "Person2": chosen_account["Username"]
-        }
-
-        reversed_connection = {
-            "Person2": config.User["Username"],
-            "Person1": chosen_account["Username"]
-        }
-
-        # Check that a request has not already been sent, or that connection is not already made
-        requests = requests_.load_requests()
-        connections = connections_.load_connections()
-        if request in requests:
-            print("You have already sent a connection request to this person!")
-        elif reversed_request in requests:
-            print("This person has already sent a connection request to you!")
-        elif connection in connections or reversed_connection in connections:
-            print("You are already connected with this person!")
-        else:
-            requests_.save_request(request)
-            print("Connection request made!")
-
-
-                             #--------------------#
-#----------------------------#    Search Major    #----------------------------#
-                             #--------------------#
-
-def search_major():
-    accounts = accounts_.load_accounts()
-
-    print("")
-    major = input("Enter a major to search by: ")
-    major = major.strip().lower()
-    print("")
-
-    # Load result_accounts with search results
-    result_accounts = []
-
-    for account in accounts:
-        if major in account["Major"].strip().lower() and account != config.User:
-            result_accounts.append(account)
-
-    # Print results
-    if not result_accounts:
-        print("")
-        print("No accounts found.")
-    else:
-        print("")
-        count = 1
-        for account in result_accounts:
-            print("[", str(count), "] ", account["First Name"], account["Last Name"])
-            count += 1
-
-        print("")
-
-        # Let user chose and account, and send a request
-        choice = input("Enter the number for a student to send a connection request: ")
-        if not choice.isdigit():
-            return
-        elif int(choice) < 1 or int(choice) > len(result_accounts):
-            print("Invalid number.")
-            return
-        chosen_account = result_accounts[int(choice) - 1]
-
-        request = {
-            "Requester": config.User["Username"],
-            "Recipient": chosen_account["Username"]
-        }
-
-        reversed_request = {
-            "Requester": chosen_account["Username"],
-            "Recipient": config.User["Username"]
-        }
-
-        connection = {
-            "Person1": config.User["Username"],
-            "Person2": chosen_account["Username"]
-        }
-
-        reversed_connection = {
-            "Person2": config.User["Username"],
-            "Person1": chosen_account["Username"]
-        }
-
-        # Check that a request has not already been sent, or that connection is not already made
-        requests = requests_.load_requests()
-        connections = connections_.load_connections()
-        if request in requests:
-            print("You have already sent a connection request to this person!")
-        elif reversed_request in requests:
-            print("This person has already sent a connection request to you!")
-        elif (connection in connections) or (reversed_connection in connections):
-            print("You are already connected with this person!")
-        else:
-            requests_.save_request(request)
-            print("Connection request made!")
-
 
 
                            ###########################
@@ -415,13 +230,13 @@ def search_major():
 
 def home():
 
-
-# Display Menu
-
+    # Display Menu
     while True:
 
+        user = config.user
+
         print("")
-        print("Logged in as", config.User["First Name"], config.User["Last Name"])
+        print("Logged in as", user.first_name, user.last_name)
         print("")
         print("|---------------------------|")
         print("         Home Screen         ")
@@ -434,38 +249,35 @@ def home():
         print("     [4] Show my Network")
         print("      [5] Learn a New Skill")
 
-        if config.User['Created a Profile'] :
+        if user.created_a_profile :
             print("       [6] Edit my Profile")
         else :
             print("       [6] Create a Profile")
-
-        print("        [7] Log Out")
+        print("        [7] Inbox")
+        print("         [8] Log Out")
         print("")
 
-        #jobs_.notify_job_deletions_since_last_visit(config.User["Username"])
+        user.receive_notifications()
 
+        # User Chooses
+        choice = input("Enter an option (or press Enter to access links): ")
 
-# User Chooses
-
-        main_choice = input("Enter an option (or press Enter to access links): ")
-
-        if main_choice == "": linkster()
-        elif main_choice == "1": jobs_.job_menu()
-        elif main_choice == "2": friend_connect()
-        elif main_choice == "3": requests_.view_requests()
-        elif main_choice == "4": connections_.view_connections()
-        elif main_choice == "5": skills_.skill_menu()
-        elif main_choice == "6": profiles_.edit_profile()
-
-        elif main_choice == "7":
+        # The 'menu()' of each branch is the entry point of each module
+        if choice == "": linkster()
+        elif choice == "1": jobs_.menu()
+        elif choice == "2": friend_connect()
+        elif choice == "3": requests_.menu()
+        elif choice == "4": connections_.menu()
+        elif choice == "5": skills_.menu()
+        elif choice == "6": profiles_.menu()
+        elif choice == "7": mail_.menu()
+        elif choice == "8":
             print("Logging out...")
             accounts_.logout()
             return
 
-# Error Handling
-
-        else:
-            print("Invalid choice. Please select an available option.")
+        # Error Handling
+        else: print("Invalid choice. Please select an available option.")
 
 
 
@@ -484,39 +296,27 @@ def linkster():
 
     while True:
 
-
-# Display Menu
-
+        # Display Menu
         print("")
         print("_________")
         print("  Links |_____________________________________________")
         print(" [<] InCollege Important Links   |   Useful Links [>] ")
 
-
-# Prompt
-
+        # Prompt
         stay_in_menu = True
         link_choice = input("Please select an option (or press Enter to return): ")
 
-
-# Outcomes
-
+        # Outcomes
         if link_choice == '': return
         elif link_choice == '<': stay_in_menu = linkster_important()
         elif link_choice == '>': stay_in_menu = linkster_useful()
 
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
-# Error Handling
-
-        else:
-            print("Invalid input. Please enter an available option.")
-
-
-# Return From Next Menus
-
+        # Return From Next Menus
         if stay_in_menu: continue
         else: return
-
 
 
                       #---------------------------------#
@@ -527,15 +327,12 @@ def linkster_important():
 
     while True:
 
-
-# Signed In?
-
-        if config.User is None: signed_in = False
+        # Signed In?
+        if config.user is None: signed_in = False
         else: signed_in = True
 
 
-# Display Links
-
+        # Display Links
         print("")
         print("_____________________________")
         print("  InCollege Important Links |_________________________")
@@ -543,26 +340,20 @@ def linkster_important():
         print(" [b] About                  |    [g] Copyright Policy ")
         print(" [c] Accessibility          |    [h] Brand Policy ")
 
-
-# Signed In Shows Languages
-
+        # Signed In Shows Languages
         if signed_in:
             print(" [d] User Agreement         |    [i] Languages ")
         else:
             print(" [d] User Agreement         |                  ")
 
-
-# Finish Displaying & Prompt
-
+        # Finish Displaying & Prompt
         print(" [e] Privacy Policy         |                    ")
         print("                                          Go Back [>] ")
 
         stay_in_menu = True
         important_choice = input("Please select an option (or press Enter to return): ")
 
-
-# Outcomes
-
+        # Outcomes
         if important_choice == "": return False
         elif important_choice == '>': return True
 
@@ -576,18 +367,12 @@ def linkster_important():
         elif important_choice == 'h': stay_in_menu = policies_.brand()
         elif important_choice == 'i' and signed_in: stay_in_menu = policies_.languages()
 
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
-# Error Handling
-
-        else:
-            print("Invalid input. Please enter an available option.")
-
-
-# Return From Next Menus
-
+        # Return From Next Menus
         if stay_in_menu: continue
         else: return False
-
 
 
                              #--------------------#
@@ -598,9 +383,7 @@ def linkster_useful():
 
     while True:
 
-
-# Display Menu
-
+        # Display Menu
         print("")
         print("________________")
         print("  Useful Links |______________________________________")
@@ -608,15 +391,11 @@ def linkster_useful():
         print(" [b] Browse InCollege     |    [d] Directories        ")
         print(" [<] Go Back")
 
-
-# Prompt
-
+        # Prompt
         stay_in_menu = True
         useful_choice = input("Please select an option (or press Enter to return): ")
 
-
-# Outcomes
-
+        # Outcomes
         if useful_choice == "": return False
         elif useful_choice == '<': return stay_in_menu
 
@@ -625,18 +404,12 @@ def linkster_useful():
         elif useful_choice == 'c': config.under_construction()
         elif useful_choice == 'd': config.under_construction()
 
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
-# Error Handling
-
-        else:
-            print("Invalid input. Please enter an available option.")
-
-
-# Return from Next Menus
-
+        # Return from Next Menus
         if stay_in_menu: continue
         else: return False
-
 
 
                                #---------------#
@@ -649,15 +422,11 @@ def linkster_general():
 
     while True:
 
-
-# Signed In?
-
-        if config.User is None: signed_in = False
+        # Signed In?
+        if config.user is None: signed_in = False
         else: signed_in = True
 
-
-# Display Menu
-
+        # Display Menu
         print("")
         print("___________")
         print("  General |___________________________________________")
@@ -666,23 +435,16 @@ def linkster_general():
         print(" [c] Press                  |    [f] Developers       ")
         print("")
 
-
-# Signed Out Shows 'Sign Up'
-
+        # Signed Out Shows 'Sign Up'
         if signed_in:
             print(" [<] Go Back")
         else:
             print(" [<] Go Back                              Sign Up [>] ")
 
-
-
-# Prompt
-
+        # Prompt
         general_choice = input("Please select an option (or press Enter to return): ")
 
-
-# Outcomes
-
+        # Outcomes
         if general_choice == "": return False
         elif general_choice == '<': return True
         elif general_choice == '>' and not signed_in:
@@ -702,16 +464,12 @@ def linkster_general():
             print("\nInCollege Pressroom:")
             print("   Stay on top of the latest news, updates, and reports.\n")
 
-
         elif general_choice == 'd': config.under_construction()
         elif general_choice == 'e': config.under_construction()
         elif general_choice == 'f': config.under_construction()
 
-
-# Error Handling
-
-        else:
-            print("Invalid input. Please enter an available option.")
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
 
 

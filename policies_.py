@@ -47,15 +47,11 @@ def privacy():
 
     while True:
 
-
-# Is User Signed In?
-
-        if config.User is None: signed_in = False
+        # Is User Signed In?
+        if config.user is None: signed_in = False
         else: signed_in = True
 
-
-# Menu Display
-
+        # Menu Display
         print("__________________")
         print("  Privacy Policy |____________________________________")
 
@@ -70,35 +66,25 @@ def privacy():
         print("     history (within our application or site) or amount")
         print("     of time spent within the app itself.\n")
 
-
-# Option Available if Signed In
-
+        # Option Available if Signed In
         if signed_in:
             print(" [<] Guest Controls                       Go Back [>] ")
         else:
             print("                                          Go Back [>] ")
 
-
-# Prompt
+        # Prompt
         stay_in_menu = True
-        privacy_choice = input("Please select an option (or press Enter to return): ")
+        choice = input("Please select an option (or press Enter to return): ")
 
+        # Outcomes
+        if choice == '': return False
+        elif choice == '>': return True
+        elif choice == '<': stay_in_menu = settings_.guest_controls()
 
-# Outcomes
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
-        if privacy_choice == '': return False
-        elif privacy_choice == '>': return True
-        elif privacy_choice == '<': stay_in_menu = settings_.guest_controls()
-
-
-# Error Handling
-
-        else:
-            print("Invalid input. Please enter an available option.")
-
-
-# Option from Guest Controls
-
+        # Option from Guest Controls
         if stay_in_menu: continue
         else: return False
 
@@ -121,13 +107,11 @@ def notice():
         print("                                          Go Back [>] ")
 
 
-        copyright_choice = input("Please select an option (or press Enter to return): ")
+        choice = input("Please select an option (or press Enter to return): ")
 
-        if copyright_choice == '': return False
-        elif copyright_choice == '>': return True
-
-        else:
-            print("Invalid input. Please enter an available option.")
+        if choice == '': return False
+        elif choice == '>': return True
+        else: print("Invalid input. Please enter an available option.")
 
 
                                  #-------------#
@@ -151,13 +135,11 @@ def about():
 
     print("                                          Go Back [>] ")
 
-    about_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if about_choice == '': return False
-    elif about_choice == '>': return True
-
-    else:
-        print("Invalid input. Please enter an available option.")
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
 
                             #---------------------#
@@ -177,13 +159,11 @@ def accessibility():
     print("     questions, comments, or concerns.")
     print("                                          Go Back [>] ")
 
-    access_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if access_choice == '': return False
-    elif access_choice == '>': return True
-
-    else:
-        print("Invalid input. Please enter an available option.")
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
 
                             #----------------------#
@@ -206,13 +186,11 @@ def user_agreement():
 
     print("                                          Go Back [>] ")
 
-    agreement_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if agreement_choice == '': return False
-    elif agreement_choice == '>': return True
-
-    else:
-        print("Invalid input. Please enter an available option.")
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
 
                                 #---------------#
@@ -237,13 +215,11 @@ def cookies():
 
     print("                                          Go Back [>] ")
 
-    cookie_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if cookie_choice == '': return False
-    elif cookie_choice == '>': return True
-
-    else:
-        print("Invalid input. Please enter an available option.")
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
 
                                #-----------------#
@@ -271,13 +247,11 @@ def copy_right():
 
     print("                                          Go Back [>] ")
 
-    copyright_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if copyright_choice == '': return False
-    elif copyright_choice == '>': return True
-
-    else:
-        print("Invalid input. Please enter an available option.")
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
 
                                  #-------------#
@@ -302,13 +276,12 @@ def brand():
 
     print("                                          Go Back [>] ")
 
-    brand_choice = input("Please select an option (or press Enter to return): ")
+    choice = input("Please select an option (or press Enter to return): ")
 
-    if brand_choice == '': return False
-    elif brand_choice == '>': return True
+    if choice == '': return False
+    elif choice == '>': return True
+    else: print("Invalid input. Please enter an available option.")
 
-    else:
-        print("Invalid input. Please enter an available option.")
 
                                #-----------------#
 #------------------------------#    Languages    #-----------------------------#
@@ -318,31 +291,27 @@ def languages():
     while True:
 
 
-# Menu Display
-
+        # Menu Display
         print("_____________")
         print("  Languages |_________________________________________")
 
-        print("      [1] Language :", config.UserSettings['Language'])
+        print("      [1] Language :", config.settings.language)
         print("                                         Return [>] ")
 
 
-# Prompt
-
-        lang_choice = input("Please select an option (or press Enter to return): ")
-
-
-# Outcomes
-
-        if lang_choice == '': return False
-        elif lang_choice == '>': return True
-        elif lang_choice == '1': settings_.change_language(config.UserSettings['Language'])
+        # Prompt
+        choice = input("Please select an option (or press Enter to return): ")
 
 
-# Error Handling
+        # Outcomes
+        if choice == '': return False
+        elif choice == '>': return True
+        elif choice == '1':
+            config.settings.language = config.user.toggle_language()
 
-        else:
-            print("Invalid input. Please enter an available option.")
+
+        # Error Handling
+        else: print("Invalid input. Please enter an available option.")
 
 
 # End of File

@@ -12,17 +12,7 @@
                              #--------------------#
 
 import sqlite3
-
-from config import (
-    DBAccounts,
-    DBProfiles,
-    DBSettings,
-    DBJobs,
-    DBSavedJobs,
-    DBApplications,
-    DBConnections,
-    DBRequests, DBNotifications
-)
+from config import DB
 
 
                            #-------------------------#
@@ -31,7 +21,7 @@ from config import (
 #                                                                              #
 #                             [ 1 ] Database Connection                        #
 #                                                                              #
-#                             [ 2 ] Table - Accounts                           #
+#                             [ 2 ] Table - Users                              #
 #                             [ 3 ] Table - Profiles                           #
 #                             [ 4 ] Table - Settings                           #
 #                                                                              #
@@ -60,12 +50,12 @@ from config import (
 
        # Connects to passed database address; returns connection and cursor #
 
-def connect_to(database):
+def connect_to_database():
 
     try:
-        connection = sqlite3.connect(database)
+        connection = sqlite3.connect(DB)
         cursor = connection.cursor()
-        #connection.execute("PRAGMA foreign_keys = ON;")
+        cursor.execute("PRAGMA foreign_keys = ON;")
         return connection, cursor
 
     except sqlite3.Error as err:
@@ -80,21 +70,21 @@ def connect_to(database):
 
                   # Functions that create each database table #
 
-                             #----------------------#
-#----------------------------#    Accounts Table    #--------------------------#
-                             #----------------------#
+                              #-------------------#
+#-----------------------------#    Users Table    #----------------------------#
+                              #-------------------#
 
-def create_accounts_table():
+def create_users_table():
 
 
-    connection, cursor = connect_to(DBAccounts)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
 
     try:
         cursor.execute('''
-            CREATE TABLE IF NOT EXISTS accounts (
+            CREATE TABLE IF NOT EXISTS users (
                 username VARCHAR(12) PRIMARY KEY,
                 password VARCHAR(12),
                 first_name VARCHAR(50),
@@ -108,10 +98,9 @@ def create_accounts_table():
         connection.commit()
 
     except sqlite3.Error as err:
-        print("There was an error creating the 'accounts' table: ", err)
+        print("There was an error creating the 'users' table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -121,7 +110,7 @@ def create_accounts_table():
 
 def create_profiles_table():
 
-    connection, cursor = connect_to(DBProfiles)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -154,17 +143,11 @@ def create_profiles_table():
                 job_3_location TEXT,
                 job_3_description TEXT,
 
-                college_name VARCHAR(100),
-                college_major VARCHAR(50),
-                college_years_attended TEXT,
+                university VARCHAR(100),
+                major VARCHAR(50),
+                years_attended TEXT,
 
-                FOREIGN KEY (username) REFERENCES accounts(username),
-                FOREIGN KEY (college_name) REFERENCES accounts(university),
-                FOREIGN KEY (college_major) REFERENCES accounts(major),
-
-                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username),
-                CONSTRAINT fk_college_name FOREIGN KEY (college_name) REFERENCES accounts(university),
-                CONSTRAINT fk_college_major FOREIGN KEY (college_major) REFERENCES accounts(major)
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
         connection.commit()
@@ -173,7 +156,6 @@ def create_profiles_table():
         print("There was an error creating the profiles table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -184,7 +166,7 @@ def create_profiles_table():
 def create_settings_table():
 
 
-    connection, cursor = connect_to(DBSettings)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -197,8 +179,7 @@ def create_settings_table():
                 email_on BOOLEAN,
                 sms_on BOOLEAN,
                 ads_on BOOLEAN,
-                FOREIGN KEY (username) REFERENCES accounts(username),
-                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
         connection.commit()
@@ -207,7 +188,6 @@ def create_settings_table():
         print("There was an error creating the settings table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -218,7 +198,7 @@ def create_settings_table():
 def create_job_table():
 
 
-    connection, cursor = connect_to(DBJobs)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -233,8 +213,7 @@ def create_job_table():
                 employer VARCHAR(100),
                 salary DECIMAL(10, 2),
                 username VARCHAR(12),
-                -- Add constraint name to avoid confusion
-                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES accounts(username)
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
         connection.commit()
@@ -243,7 +222,6 @@ def create_job_table():
         print("There was an error creating the 'jobs' table: ", err)
 
     finally:
-
         if connection: connection.close()
 
 
@@ -254,7 +232,7 @@ def create_job_table():
 
 def create_saved_jobs_table():
 
-    connection, cursor = connect_to(DBSavedJobs)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -262,22 +240,18 @@ def create_saved_jobs_table():
     try:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS saved_jobs (
-                student_username VARCHAR(12),
+                username VARCHAR(12),
                 job_id INTEGER,
-                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username),
-                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username),
+                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id) ON DELETE CASCADE
             );
         ''')
         connection.commit()
 
-
     except sqlite3.Error as err:
-
         print("There was an error creating the 'saved_jobs' table: ", err)
 
-
     finally:
-
         if connection: connection.close()
 
 
@@ -288,7 +262,7 @@ def create_saved_jobs_table():
 
 def create_applications_table():
 
-    connection, cursor = connect_to(DBApplications)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -297,25 +271,21 @@ def create_applications_table():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS applications (
                 application_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                student_username VARCHAR(12),
+                username VARCHAR(12),
                 job_id INTEGER,
                 graduation_date DATE,
                 start_date DATE,
                 application_text TEXT,
-                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username),
-                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id)
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username),
+                CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id) ON DELETE CASCADE
             );
         ''')
         connection.commit()
 
-
     except sqlite3.Error as err:
-
         print("There was an error creating the 'applications' table: ", err)
 
-
     finally:
-
         if connection: connection.close()
 
                             # --------------------------#
@@ -324,7 +294,7 @@ def create_applications_table():
 
 def create_notifications_table():
 
-    connection, cursor = connect_to(DBNotifications)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -332,20 +302,19 @@ def create_notifications_table():
     try:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS notifications (
-                student_username VARCHAR(12),
-                CONSTRAINT fk_student_username FOREIGN KEY (student_username) REFERENCES accounts(username)
+                notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username VARCHAR(12),
+                message TEXT,
+                seen BOOLEAN DEFAULT FALSE,
+                CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
         connection.commit()
 
-
     except sqlite3.Error as err:
-
         print("There was an error creating the 'notifications' table: ", err)
 
-
     finally:
-
         if connection: connection.close()
 
 
@@ -356,7 +325,7 @@ def create_notifications_table():
 
 def create_requests_table():
 
-    connection, cursor = connect_to(DBRequests)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -367,10 +336,8 @@ def create_requests_table():
                 request_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 requester VARCHAR(12),
                 recipient VARCHAR(12),
-                FOREIGN KEY (requester) REFERENCES accounts(username),
-                FOREIGN KEY (recipient) REFERENCES accounts(username),
-                CONSTRAINT fk_username FOREIGN KEY (requester) REFERENCES accounts(username),
-                CONSTRAINT fk_username FOREIGN KEY (recipient) REFERENCES accounts(username)
+                CONSTRAINT fk_username FOREIGN KEY (requester) REFERENCES users(username),
+                CONSTRAINT fk_username FOREIGN KEY (recipient) REFERENCES users(username)
             );
         ''')
         connection.commit()
@@ -388,7 +355,7 @@ def create_requests_table():
 
 def create_connections_table():
 
-    connection, cursor = connect_to(DBConnections)
+    connection, cursor = connect_to_database()
 
     if connection is None:
         return
@@ -399,10 +366,8 @@ def create_connections_table():
                             connection_id INTEGER PRIMARY KEY AUTOINCREMENT,
                             person1 VARCHAR(12),
                             person2 VARCHAR(12),
-                            FOREIGN KEY (person1) REFERENCES accounts(username),
-                            FOREIGN KEY (person2) REFERENCES accounts(username),
-                            CONSTRAINT fk_username FOREIGN KEY (person1) REFERENCES accounts(username),
-                            CONSTRAINT fk_username FOREIGN KEY (person2) REFERENCES accounts(username)
+                            CONSTRAINT fk_username FOREIGN KEY (person1) REFERENCES users(username),
+                            CONSTRAINT fk_username FOREIGN KEY (person2) REFERENCES users(username)
                         );
                     ''')
         connection.commit()
@@ -411,8 +376,44 @@ def create_connections_table():
         print("There was an error creating the connections table: ", err)
 
     finally:
-
         if connection: connection.close()
+
+
+
+
+                            #----------------------#
+#---------------------------#    Messages Table    #---------------------------#
+                            #----------------------#
+
+def create_messages_table():
+
+    connection, cursor = connect_to_database()
+
+    if connection is None:
+        return
+
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender VARCHAR(12),
+                receiver VARCHAR(12),
+                subject TEXT,
+                body TEXT,
+                is_read BOOL,
+                CONSTRAINT fk_sender FOREIGN KEY (sender) REFERENCES users(username),
+                CONSTRAINT fk_receiver FOREIGN KEY (receiver) REFERENCES users(username)
+            );
+        ''')
+        connection.commit()
+
+    except sqlite3.Error as err:
+        print("There was an error creating the 'messages' table: ", err)
+
+    finally:
+        if connection: connection.close()
+
+
 
                              #---------------------#
 #----------------------------#    Create Tables    #---------------------------#
@@ -420,7 +421,7 @@ def create_connections_table():
 
 def create_all_tables():
 
-    create_accounts_table()
+    create_users_table()
     create_profiles_table()
     create_settings_table()
     create_job_table()
@@ -429,6 +430,7 @@ def create_all_tables():
     create_saved_jobs_table()
     create_requests_table()
     create_connections_table()
+    create_messages_table()
 
 
 

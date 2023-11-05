@@ -15,30 +15,24 @@ import sqlite3
 
 import config
 import home_
-import settings_
 import profiles_
+from data_ import connect_to_database
 
-from config import DBAccounts
-from data_ import connect_to
+from classes.User import User
+from classes.UserSettings import UserSettings
+from classes.UserProfile import UserProfile
+
 
                            #-------------------------#
 #--------------------------#    Table of Contents    #-------------------------#
 #                          #-------------------------#                         #
 #                                                                              #
-#                             [ 1 ] Load Accounts                              #
-#                             [ 2 ] Save Accounts                              #
-#                             [ 3 ] Find Account                               #
+#                             [ 1 ] Password Requirements                      #
+#                             [ 2 ] Create Account                             #
 #                                                                              #
-#                             [ 4 ] Create Username                            #
-#                             [ 5 ] Create Password                            #
-#                             [ 6 ] Check Number of Accounts                   #
-#                             [ 7 ] Validate Credentials                       #
-#                             [ 8 ] Create Account                             #
-#                                                                              #
-#                             [ 9 ] Get Profile Info                           #
-#                             [ 10 ] Log In                                    #
-#                             [ 11 ] Log Out                                   #
-#                             [ 12 ] Login Menu                                #
+#                             [ 3 ] Log In                                     #
+#                             [ 4 ] Log Out                                    #
+#                             [ 5 ] Login Menu                                 #
 #                                                                              #
 #------------------------------------------------------------------------------#
 
@@ -47,209 +41,15 @@ from data_ import connect_to
 ##############################  F U N C T I O N S  #############################
                            ###########################
 
-             # All functions that deal with account info are here. #
-
-                             #---------------------#
-#----------------------------#    Load Accounts    #---------------------------#
-                             #---------------------#
-
-            # Gets all accounts from student database, returns them. #
-                 # Called during create_account() and login() #
-
-def load_accounts():
-
-
-# Connect to Database
-
-    connection, cursor = connect_to(DBAccounts)
-
-    if connection is None:
-        return
-
-
-# Define Target Info
-
-    query = '''
-        SELECT
-            username,
-            password,
-            first_name,
-            last_name,
-            university,
-            major,
-            created_a_profile,
-            plus
-        FROM
-            accounts;
-    '''
-
-
-# Execute Query
-
-    try:
-        cursor.execute(query)
-        accounts_data = cursor.fetchall()
-        config.Accounts = [{
-                    "Username": username,
-                    "Password": password,
-                    "First Name": first_name,
-                    "Last Name": last_name,
-                    "University": university,
-                    "Major": major,
-                    "Created a Profile": created_a_profile,
-                    "Plus": plus
-                    } for username, password, first_name, last_name, university, major, created_a_profile, plus in accounts_data]
-
-    except sqlite3.Error as err:
-        print("There was an error delivering the query: ", err)
-
-
-# Close Connection
-
-    finally:
-
-        if connection:
-            connection.commit()
-            connection.close()
-
-            return config.Accounts
-
-
-
-                             #---------------------#
-#----------------------------#    Save Accounts    #---------------------------#
-                             #---------------------#
-
-                  # Saves passed accounts to student database #
-                        # Called during create_account() #
-
-def save_accounts(accounts):
-
-
-# Connect to Database
-
-    connection, cursor = connect_to(DBAccounts)
-
-    if connection is None:
-        return
-
-
-# Into These Columns...
-
-    query = '''
-        INSERT INTO accounts (
-            username,
-            password,
-            first_name,
-            last_name,
-            university,
-            major,
-            created_a_profile,
-            plus
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-    '''
-
-
-# ...Insert This Data
-
-    try:
-        cursor.execute("DELETE FROM accounts;")
-
-        for account in accounts:
-            cursor.execute(query,
-                (
-                    account['Username'],
-                    account['Password'],
-                    account['First Name'],
-                    account['Last Name'],
-                    account['University'],
-                    account['Major'],
-                    account['Created a Profile'],
-                    account['Plus']
-                )
-            )
-
-
-# Error Handling
-
-    except sqlite3.Error as err:
-        print("There was an error delivering the query: ", err)
-
-
-# Close Connection
-
-    finally:
-
-        if connection:
-            connection.commit()
-            connection.close()
-
-
-
-                              #--------------------#
-#-----------------------------#    Find Account    #---------------------------#
-                              #--------------------#
-
-        # Searches accounts database for a first and last name argument #
-                          # Returns the account or None #
-
-def find_account(first_name, last_name):
-
-
-# Prepare for Comparison
-
-    first_name = first_name.strip().lower()
-    last_name = last_name.strip().lower()
-
-    accounts = load_accounts()
-
-
-# Search Accounts
-
-    for account in accounts:
-
-        account_first_name = account["First Name"].strip().lower()
-        account_last_name = account["Last Name"].strip().lower()
-
-        if (
-            account_first_name == first_name
-            and
-            account_last_name == last_name
-            ):
-
-            return account
-
-        return None
-
-
-
-                             #---------------------#
-#----------------------------#   Create Username   #---------------------------#
-                             #---------------------#
-
-               # Checks passed username against passed accounts #
-                        # Called during create_account() #
-
-def create_username(username, accounts):
-
-
-    if any(account["Username"] == username for account in accounts):
-        return False
-
-    else:
-        return True
-
-
-                             #---------------------#
-#----------------------------#   Create Password   #---------------------------#
-                             #---------------------#
+          # All functions that deal with the login process are here. #
+
+                          #---------------------------#
+#-------------------------#   Password Requirements   #------------------------#
+                          #---------------------------#
 
                 # Checks password argument against requirements #
-                        # Called during create_account() #
 
-def create_password(password):
-
+def password_requirements(password):
 
     if (
         config.PasswordMinLength > len(password)
@@ -261,54 +61,7 @@ def create_password(password):
     ):
         return False
 
-
-    else:
-        return True
-
-
-                        #------------------------------#
-#-----------------------#   Check Number of Accounts   #-----------------------#
-                        #------------------------------#
-
-     # Checks the number of elements in passed data against global limit. #
-                        # Called during create_account() #
-
-def check_num_accounts(accounts):
-
-
-    if len(accounts) >= config.MaxAccounts:
-        print("All permitted accounts have been created, please come back later.")
-        return False
-
-    else:
-        print("Good news! We've got room for you!")
-        print("")
-        return True
-
-
-
-                         #----------------------------#
-#------------------------#    Validate Credentials    #------------------------#
-                         #----------------------------#
-
-      # Checks the passed username/password with the passed account list #
-                          # Called during login() #
-
-def validate_credentials(username, password, accounts):
-
-
-    for account in accounts:
-
-        if (
-            account["Username"] == username
-            and
-            account["Password"] == password
-        ):
-
-            return "You have successfully logged in."
-
-    return "Incorrect username/password, please try again."
-
+    else: return True
 
 
                             #----------------------#
@@ -316,203 +69,96 @@ def validate_credentials(username, password, accounts):
                             #----------------------#
 
           # Gets user info, checks requirements, saves them to database #
-                    # One of the paths from login_menu() #
 
 def create_account():
 
-
-    accounts = load_accounts()
-    result = check_num_accounts(accounts)
-    profiles = profiles_.load_profiles()
-
-    if not result:
+    if not User.has_room_for_new_account():
         return
 
-    print("")
-    print("|----------------------------|")
+    # Nested function for retrieving input
+    def get_input(prompt, error_message, transform_func=None):
+        while True:
+            value = input(prompt)
+            if not value:
+                print("\n" + error_message + "\n")
+                continue
+            if transform_func:
+                value = transform_func(value)
+            return value
+
+    print("\n|----------------------------|")
     print("       Account Creation       ")
-    print("|----------------------------|")
-    print("")
+    print("|----------------------------|\n")
 
+    # Entering Personal Info
+    first_name = get_input("First Name: ", "You must enter your first name to continue.")
+    last_name = get_input("Last Name: ", "You must enter your last name to continue.")
+    university = get_input("University: ", "You must enter your university to continue.", config.capitalize_each_word)
+    major = get_input("Major: ", "You must enter your major to continue.", config.capitalize_each_word)
 
-# Entering Personal Info
-
+    # Creating a Username
     while True:
-
-        first_name = input("First Name: ")
-        if not first_name:
-            print("")
-            print("You must enter your first name to continue.")
-            print("")
-            continue
-        else:
-            break
-
-    while True:
-        last_name = input("Last Name: ")
-        if not last_name:
-            print("")
-            print("You must enter your last name to continue.")
-            print("")
-            continue
-        else:
-            break
-
-    while True:
-        university = input("University: ")
-
-        if not university:
-            print("")
-            print("You must enter your university to continue.")
-            print("")
-            continue
-        else:
-            university = ' '.join([word.capitalize() for word in university.split()])
-            break
-
-    while True:
-        major = input("Major: ")
-
-        if not major:
-            print("")
-            print("You must enter your major to continue.")
-            print("")
-            continue
-        else:
-            major = ' '.join([word.capitalize() for word in major.split()])
-            break
-
-
-# Creating a Username
-
-    while True:
-
         username = input("Enter a username: ")
         if not username:
-            return "You must enter a username."
-
-        valid = create_username(username, accounts)
-        if valid:
+            print("You must enter a username.")
+            continue
+        if not User.username_exists(username):
             break
+        print("This username already exists. Please choose a different one.")
 
-        else:
-            print("This username already exists. Please choose a different one.")
-
-
-# Creating a Password
-
+    # Creating a Password
     while True:
         password = input("Enter a password: ")
-        valid = create_password(password)
-
-        if not valid:
-            print("-------------------------------")
-            print("Invalid password. Requirements:")
-            print("   [*] Character length: 8-12")
-            print("   [*] Must contain at least 1 uppercase letter")
-            print("   [*] Must contain at least 1 digit")
-            print("   [*] Must contain at least 1 special character")
-            continue
-
-        else:
+        if password_requirements(password):
             break
+        print("-------------------------------")
+        print("Invalid password. Requirements:")
+        print("   [*] Character length: 8-12")
+        print("   [*] Must contain at least 1 uppercase letter")
+        print("   [*] Must contain at least 1 digit")
+        print("   [*] Must contain at least 1 special character")
 
-# Choosing regular or plus account type
-
+    # Choosing regular or plus account type
     print("Would you like to create a plus account?")
     print("Plus accounts cost a fee of $10 per month.")
 
+    plus = get_input("Enter Yes/No: ", "Invalid entry. Must be Yes/No.", lambda x: x.lower())
+
+    plus = True if plus == "yes" else False
+
+
+
+    # :::::::::::::::::  CurrentUser is now an object  ::::::::::::::::: #
+    #          and we can call User methods directly on the user         #
+
+    # This saves to config and database simultaneously
+    config.user = User.create(username = username,
+                                     password = password,
+                                     first_name = first_name,
+                                     last_name = last_name,
+                                     university = university,
+                                     major = major,
+                                     created_a_profile = False,
+                                     plus = plus)
+
+    # Same for default settings / starter profile
+    config.settings = config.user.get_settings()
+    config.profile = config.user.get_profile()
+
+    print("\nAccount created successfully.\n")
+
+    # Profile Creation
     while True:
-        plus = input("Enter Yes/No: ")
-        plus = plus.lower()
-
-        if plus != "yes" and plus != "no":
-            print("-------------------------------")
-            print("Invalid entry. Must be Yes/No.")
-            continue
-
-        else:
-            break
-
-    if plus == "yes":
-        plus = True
-    elif plus == "no":
-        plus = False
-
-
-# Saving to Database
-
-    config.User = {
-                "Username": username,
-                "Password": password,
-                "First Name": first_name,
-                "Last Name": last_name,
-                "University": university,
-                "Major": major,
-                "Created a Profile": False,
-                "Plus": plus
-                }
-
-
-    accounts.append(config.User)
-    save_accounts(accounts)
-
-    settings_.initialize_user(username)
-
-
-    config.UserProfile = {
-                    "Username": username,
-                    "Title": "",
-                    "About Me": "",
-
-                    "Job 1 : Title": "",
-                    "Job 1 : Employer": "",
-                    "Job 1 : Date Started": "",
-                    "Job 1 : Date Ended": "",
-                    "Job 1 : Location": "",
-                    "Job 1 : Description": "",
-
-                    "Job 2 : Title": "",
-                    "Job 2 : Employer": "",
-                    "Job 2 : Date Started": "",
-                    "Job 2 : Date Ended": "",
-                    "Job 2 : Location": "",
-                    "Job 2 : Description": "",
-
-                    "Job 3 : Title": "",
-                    "Job 3 : Employer": "",
-                    "Job 3 : Date Started": "",
-                    "Job 3 : Date Ended": "",
-                    "Job 3 : Location": "",
-                    "Job 3 : Description": "",
-
-                    "University": university,
-                    "Major": major,
-                    "Years Attended": ""
-                    }
-
-    profiles.append(config.UserProfile)
-    profiles_.save_profiles(profiles)
-
-    print("")
-    print("Account created successfully.")
-    print("")
-
-
-# Profile Creation
-
-    while True:
-        print("")
-        creating_profile = input("Since you're here, would you like to create your profile? (Y/N):")
+        choice = input("\nSince you're here, would you like to create your profile? (Y/N):")
         print("")
 
-        creating_profile.upper()
+        choice.upper()
 
-        if creating_profile == 'Y':
-            profiles_.edit_profile()
+        if choice == 'Y':
+            profiles_.menu()
             break
 
-        elif creating_profile == 'N':
+        elif choice == 'N':
             print("No problem! You can create your profile at any time from the Home Screen.")
             break
 
@@ -520,110 +166,33 @@ def create_account():
             print("Invalid input. Please enter either Y (for yes) or N (for no).")
 
 
-                           #------------------------#
-#--------------------------#    Get Account Info    #--------------------------#
-                           #------------------------#
-
-      # Returns the username, password, first name, and last name as dict #
-                # Stores dict in global var 'User' during login() #
-
-def get_account(username):
-
-    try:
-        config.Connection, cursor = connect_to(DBAccounts)
-
-        if config.Connection is None:
-            return
-
-
-# Define fields
-
-        query = '''
-            SELECT
-                username,
-                password,
-                first_name,
-                last_name,
-                university,
-                major,
-                created_a_profile,
-                plus
-            FROM
-                accounts
-            WHERE
-                username = ?
-        '''
-
-
-# Execute query
-
-        cursor.execute(query, (username,))
-        user_data = cursor.fetchone()
-
-        account = {
-                    "Username": user_data[0],
-                    "Password": user_data[1],
-                    "First Name": user_data[2],
-                    "Last Name": user_data[3],
-                    "University": user_data[4],
-                    "Major": user_data[5],
-                    "Created a Profile": user_data[6],
-                    "Plus": user_data[7]
-                    }
-
-        if config.Connection:
-            config.Connection.commit()
-            config.Connection.close()
-
-            return account
-
-
-# Error Handling
-
-    except sqlite3.Error as err:
-        print("There was an error fetching your information from the database: ", err)
-
-        if config.Connection:
-            config.Connection.commit()
-            config.Connection.close()
-
-            return None
-
 
                                  #-------------#
 #--------------------------------#    Login    #-------------------------------#
                                  #-------------#
 
    # Performs the login function, accepts or rejects the username/password #
-                    # One of the paths from login_menu() #
 
 def login():
 
-
-# Get Credentials
-
+    # Get Credentials
     while True:
 
         username = input("Username: ")
         password = input("Password: ")
 
+        # Cross-check
+        is_valid = User.validate_credentials(username, password)
 
-# Cross-check with Accounts
+        # Outcomes
+        if is_valid:
 
-        accounts = load_accounts()
-        result = validate_credentials(username, password, accounts)
+            print("You have successfully logged in.")
 
+            config.user = User.fetch(username)
+            config.settings = UserSettings.fetch(username)
+            config.profile = UserProfile.fetch(username)
 
-# Outcomes
-
-        if result == "You have successfully logged in.":
-
-            print(result)
-            config.User = get_account(username)     # Load account details into config.py
-            config.UserProfile = profiles_.get_profile(username)
-
-            settings_.load_user_settings()      # Do the same with their settings
-            settings_.initialize_settings_database()
             home_.home()
 
             return
@@ -633,14 +202,14 @@ def login():
             print("X------------X------------X------------X------------X")
             print("|   Incorrect username/password, please try again.  |")
             print("X------------X------------X------------X------------X")
+            print("")
 
             choice = input('''
                 Press 'Enter' now to try again or
                 any other key to return to the opening menu:
                 ''')
 
-            if choice:
-                return
+            if choice: return
 
 
                                  #--------------#
@@ -648,13 +217,12 @@ def login():
                                  #--------------#
 
             # Logs the user out; resets all global variables to default #
-                          # One of the paths from home() #
 
 def logout():
 
-    config.User = None
-    config.UserProfile = None
-    config.UserSettings = None
+    config.user = None
+    config.profile = None
+    config.settings = None
 
 
 
@@ -667,9 +235,7 @@ def logout():
 
 def login_menu():
 
-
-# Display Menu
-
+    # Display Menu
     while True:
 
         home_.show_success_story()
@@ -687,25 +253,21 @@ def login_menu():
         print("      [5] Quit")
         print("")
 
-        login_choice = input("Enter an option (or press Enter to access links): ")
+        choice = input("Enter an option (or press Enter to access links): ")
         print("")
 
+        # User Chooses
+        if choice == "": home_.linkster()
+        elif choice == "1": home_.watch_video()
+        elif choice == "2": login()
+        elif choice == "3": create_account()
+        elif choice == "4": home_.friend_status()
 
-# User Chooses
-
-        if login_choice == "": home_.linkster()
-        elif login_choice == "1": home_.watch_video()
-        elif login_choice == "2": login()
-        elif login_choice == "3": create_account()
-        elif login_choice == "4": home_.friend_status()
-
-        elif login_choice == "5":
+        elif choice == "5":
             print("Quitting the app...")
             exit()
 
-
-# Error Handling
-
+        # Error Handling
         else:
             print("Your chosen input is invalid. Please select a number 1-4.")
 

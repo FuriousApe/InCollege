@@ -1,4 +1,3 @@
-
                       #######################################
 ###########################                             ########################
 ###########################  C O N F I G U R A T I O N  ########################
@@ -13,78 +12,19 @@
 #------------------------------#    Variables    #-----------------------------#
                                #-----------------#
 
-User = None
-# Dictionary
-# Holds the user's personal info after login
-#
-#       CURRENT KEYS:       'Username' : String
-#                           'Password' : String
-#                           'First Name' : String
-#                           'Last Name' : String
-#                           'University' : String
-#                           'Major' : String
-#                           'Created a Profile' : Bool
-#                           'Plus': Bool
+user = None
+# Object
+# Represents the current user after login
 
 
-UserProfile = None
-# Dictionary
-# Holds the user's profile info after login
-#
-#       CURRENT KEYS:       'Username' : String
-#                           'Title' : String
-#                           'About Me' : String
-#                           'University' : String
-#                           'Major' : String
-#                           'Years Attended' : String
-#                           'Job 1 : Title' : String
-#                           'Job 1 : Employer' : String
-#                           'Job 1 : Date Started' : String
-#                           'Job 1 : Date Ended' : String
-#                           'Job 1 : Location' : String
-#                           'Job 1 : Description' : String
-#                           ...
-#                           'Job 3 : Description' : String
+profile = None
+# Object
+# Represents the current user's profile after login
 
 
-
-UserSettings = None
-# Dictionary
-# Holds the user's chosen settings after login
-#
-#       CURRENT KEYS:       'Username' : String
-#                           'Language' : String
-#                           'Email On' : Bool
-#                           'SMS On' : Bool
-#                           'Ads On' : Bool
-
-
-Accounts = None
-# Dictionaries
-# Holds all users' personal info after load_accounts()
-
-Profiles = None
-# Dictionaries
-# Holds all users' profile info after load_profiles()
-
-Settings = None
-# Dictionaries
-# Holds each users' chosen settings after load_settings()
-
-Jobs = None
-# Dictionaries
-# Holds all posted jobs after load_jobs()
-
-Requests = None
-# Dictionaries
-# Holds all requests after load_requests()
-
-Connections = None
-# Dictionaries
-# Holds all connections after load_connections()
-
-Connection = None
-# Occasionally used to hold active DB connection for error avoidance
+settings = None
+# Object
+# Represents the current user's settings after login
 
 
 # Passwords
@@ -101,20 +41,12 @@ MaxJobs = 10
                                #------------------#
 
 # Databases
-DBAccounts = 'student_accounts.db'
-DBProfiles = 'user_profiles.db'
-DBSettings = 'user_settings.db'
-DBJobs = 'job_postings.db'
-DBSavedJobs = 'saved_jobs.db'
-DBApplications = 'applications.db'
-DBNotifications = 'notifications.db'
-DBRequests = 'requests.db'
-DBConnections = 'connections.db'
+DB = 'incollege_database.db'
 
 
-                                 #--------------#
-#--------------------------------#    Labels    #------------------------------#
-                                 #--------------#
+                               #-----------------#
+#------------------------------#    Functions    #-----------------------------#
+                               #-----------------#
 
 # Under Construction
 def under_construction():
@@ -123,6 +55,12 @@ def under_construction():
     print(" / / / / /  UNDER CONSTRUCTION / / / / /")
     print("/ / / / / / / / / / / / / / / / / / / /")
     print("")
+
+
+
+def capitalize_each_word(input_str):
+    return ' '.join([word.capitalize() for word in input_str.split()])
+
 
 
 
