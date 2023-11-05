@@ -9,7 +9,6 @@ import home_
 import config
 import jobs_
 import applications_
-import notifications_
 
 
 @patch('jobs_.load_jobs', MagicMock(return_value=
