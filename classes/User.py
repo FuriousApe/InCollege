@@ -2,17 +2,20 @@
 import sqlite3
 import config
 from data_ import connect_to_database
+from datetime import datetime, timedelta
 
 from classes.UserSettings import UserSettings
 from classes.UserProfile import UserProfile
 from classes.Request import Request
 from classes.Connection import Connection
 from classes.Message import Message
+from classes.Notification import Notification
+from classes.Application import Application
 
 
 class User:
 
-    def __init__(self, username, password, first_name=None, last_name=None, university=None, major=None, created_a_profile=False, plus=False):
+    def __init__(self, username, password, first_name=None, last_name=None, university=None, major=None, created_a_profile=False, plus=False, last_login_date=None, date_joined=None):
 
         self.username = username
         self.password = password
@@ -24,6 +27,8 @@ class User:
         self.plus = plus
         self.friends = [friend[0] for friend in self.get_friends()]
         self.inbox = []
+        self.last_login_date = last_login_date
+        self.date_joined = date_joined
 
     def save(self):
         connection, cursor = connect_to_database()
@@ -39,15 +44,15 @@ class User:
                 # Update user's details
                 cursor.execute('''
                     UPDATE users
-                    SET password = ?, first_name = ?, last_name = ?, university = ?, major = ?, created_a_profile = ?, plus = ?
+                    SET password = ?, first_name = ?, last_name = ?, university = ?, major = ?, created_a_profile = ?, plus = ?, last_login_date = ?, date_joined = ?
                     WHERE username = ?
-                ''', (self.password, self.first_name, self.last_name, self.university, self.major, self.created_a_profile, self.plus, self.username))
+                ''', (self.password, self.first_name, self.last_name, self.university, self.major, self.created_a_profile, self.plus, self.last_login_date, self.date_joined, self.username))
             else:
                 # Insert a new user
                 cursor.execute('''
-                    INSERT INTO users(username, password, first_name, last_name, university, major, created_a_profile, plus)
-                    VALUES(?,?,?,?,?,?,?,?)
-                ''', (self.username, self.password, self.first_name, self.last_name, self.university, self.major, self.created_a_profile, self.plus))
+                    INSERT INTO users(username, password, first_name, last_name, university, major, created_a_profile, plus, last_login_date, date_joined)
+                    VALUES(?,?,?,?,?,?,?,?,?,?)
+                ''', (self.username, self.password, self.first_name, self.last_name, self.university, self.major, self.created_a_profile, self.plus, self.last_login_date, self.date_joined))
 
             connection.commit()
 
@@ -76,8 +81,61 @@ class User:
         finally:
             if connection: connection.close()
 
-        # To use:
-        # current_user = User.fetch(username)
+    def new_users_since_login(self):
+
+        connection, cursor = connect_to_database()
+        if connection is None: return None
+
+        new_users = []
+
+        try:
+            # Select users who joined after the last login date of the current user
+            query = 'SELECT * FROM users WHERE date_joined > ?'
+            cursor.execute(query, (self.last_login_date,))
+
+            user_data = cursor.fetchall()
+
+            if user_data:
+                for user_record in user_data:
+                    user = User(*user_record)
+                    new_users.append(user)
+
+        except sqlite3.Error as err:
+            print("There was an error fetching the users from the database: ", err)
+            return None
+
+        finally:
+            if connection: connection.close()
+
+        return new_users
+
+    def new_jobs_since_login(self):
+
+        connection, cursor = connect_to_database()
+        if connection is None: return None
+
+        new_jobs = []
+
+        try:
+            # Select jobs that were posted after the last login date
+            query = 'SELECT * FROM jobs WHERE date_posted > ?'
+            cursor.execute(query, (self.last_login_date,))
+
+            job_data = cursor.fetchall()
+
+            if job_data:
+                for job_record in job_data:
+                    job = JobPost(*job_record)
+                    new_jobs.append(job)
+
+        except sqlite3.Error as err:
+            print("There was an error fetching the users from the database: ", err)
+            return None
+
+        finally:
+            if connection: connection.close()
+
+        return new_jobs
 
     @classmethod
     def username_exists(cls, username):
@@ -99,8 +157,11 @@ class User:
     @classmethod
     def create(cls, username, password, first_name=None, last_name=None, university=None, major=None, created_a_profile=False, plus=None):
 
+        last_login_date = datetime.now()
+        date_joined = datetime.now()
+
         # At this point, the username is available
-        new_user = cls(username, password, first_name, last_name, university, major, created_a_profile, plus)
+        new_user = cls(username, password, first_name, last_name, university, major, created_a_profile, plus, last_login_date, date_joined)
         new_user.save()
         UserSettings.initialize_settings_for(username)
         UserProfile.initialize_profile_for(username, university, major)
@@ -148,7 +209,7 @@ class User:
         try:
             # Fetch user data based on the provided attributes
             cursor.execute(f'''
-                SELECT username, password, first_name, last_name, university, major, created_a_profile, plus
+                SELECT username, password, first_name, last_name, university, major, created_a_profile, plus, last_login_date, date_joined
                 FROM users
                 WHERE {search_query}
             ''', search_values)
@@ -157,7 +218,8 @@ class User:
                 user = cls(username=user_data[0], password=user_data[1],
                            first_name=user_data[2], last_name=user_data[3],
                            university=user_data[4], major=user_data[5],
-                           created_a_profile=user_data[6], plus=user_data[7])
+                           created_a_profile=user_data[6], plus=user_data[7],
+                           last_login_date=user_data[8], date_joined=user_data[9])
                 users.append(user)
 
         except sqlite3.Error as err:
@@ -312,37 +374,65 @@ class User:
     #::::::::::::::::::::::::::  N O T I F I C A T I O N S
 
     # Fetches all notifications for self
-    def fetch_notifications(self):
-        connection, cursor = connect_to_database()
-        if connection is None: return []
-
-        try:
-            cursor.execute('SELECT message FROM notifications WHERE username = ?', (self.username,))
-            return [row[0] for row in cursor.fetchall()]
-
-        except sqlite3.Error as err:
-            print(f"Error fetching notifications for {self.username}: ", err)
-            return []
-
-        finally:
-            if connection: connection.close()
+    def notify(self, menu):
+        notifications = Notification.fetch_for(self.username, menu)
+        for notification in notifications:
+            print(f"\n*-*-*\n{notification.message}\n*-*-*\n")
+        if notifications: self.clear_notifications(menu)
 
     # Deletes all notifications for self
-    def delete_notifications(self):
-        connection, cursor = connect_to_database()
-        if connection is None: return False
+    def clear_notifications(self, menu):
+        return Notification.delete_all_for(self.username, menu)
 
-        try:
-            cursor.execute('DELETE FROM notifications WHERE username = ?', (self.username,))
-            connection.commit()
-            return True
+    # Creates all applicable notifications for username
+    def create_all_notifications(self):
 
-        except sqlite3.Error as err:
-            print(f"Error deleting notifications for {self.username}: ", err)
-            return False
+        notifications = { }
 
-        finally:
-            if connection: connection.close()
+        if self.most_recent_app():
+            time_difference = datetime.now() - self.most_recent_app().application_date
+            been_at_least_a_week = time_difference >= timedelta(days=7)
+
+            if been_at_least_a_week:
+                notifications["Remember – you're going to want to have a job when you graduate. Make sure that you start to apply for jobs today!"] = "home"
+
+        new_users = self.new_users_since_login()
+        new_jobs = self.new_jobs_since_login()
+        self.inbox = Message.fetch_all(self.username)
+        apps = Application.get_apps_from(self.username)
+
+        if not self.created_a_profile:
+            notifications["Don't forget to create a profile"] = "home"
+
+        if self.inbox:
+            notifications["You have messages waiting for you"] = "home"
+
+        if new_users:
+            for user in new_users:
+                notifications[f"{user.first_name} {user.last_name} has joined InCollege"] = "home"
+
+        if apps is not None:
+            notifications[f"You have currently applied for {len(apps)} jobs"] = "job"
+
+        if new_jobs:
+            for job in new_jobs:
+                notifications[f"A new job {job.job_title} has been posted."] = "job"
+
+        for message, menu in notifications.items():
+            Notification.create(self.username, message, menu)
+
+
+    #::::::::::::::::::::::::::  A P P L I C A T I O N S
+
+    # Returns most recent job application
+    def most_recent_app(self):
+        applications = Application.get_apps_from(self.username)
+        if applications:
+            latest = applications[0]
+            for application in applications:
+                if application.application_date > latest.application_date:
+                    latest = application
+            return latest
 
 
     #::::::::::::::::::::::::::  M A I L  &  M E S S A G E S
@@ -417,7 +507,7 @@ class User:
 
 
     # Notifies of unread message(s)
-    def receive_notifications(self):
+    def check_messages(self):
         unread_msgs = [msg for msg in self.inbox if msg.is_read == False]
         if unread_msgs:
             print("\n|::::::::::::::::::::::::::::::::::::::::::::::::")

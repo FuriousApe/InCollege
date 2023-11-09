@@ -1,12 +1,13 @@
 
 import sqlite3
+from datetime import datetime
 from data_ import connect_to_database
 from classes.Application import Application
 
 
 class JobPost:
 
-    def __init__(self, job_id=None, job_title=None, description=None, location=None, employer=None, salary=None, username=None):
+    def __init__(self, job_id=None, job_title=None, description=None, location=None, employer=None, salary=None, username=None, date_posted=None):
         self.job_id = job_id
         self.job_title = job_title
         self.description = description
@@ -14,6 +15,7 @@ class JobPost:
         self.employer = employer
         self.salary = salary
         self.username = username
+        self.date_posted = date_posted
 
     # Save a job object to the database
     def post(self):
@@ -32,14 +34,15 @@ class JobPost:
                     employer = ?,
                     salary = ?,
                     username = ?
+                    date_posted = ?
                     WHERE job_id = ?
-                ''', (self.job_title, self.description, self.location, self.employer, self.salary, self.username, self.job_id))
+                ''', (self.job_title, self.description, self.location, self.employer, self.salary, self.username, self.date_posted, self.job_id))
             else:
                 # Insert a new job post
                 cursor.execute('''
-                    INSERT INTO jobs (job_title, description, location, employer, salary, username)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (self.job_title, self.description, self.location, self.employer, self.salary, self.username))
+                    INSERT INTO jobs (job_title, description, location, employer, salary, username, date_posted)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (self.job_title, self.description, self.location, self.employer, self.salary, self.username, self.date_posted))
                 self.job_id = cursor.lastrowid
 
             connection.commit()
@@ -65,7 +68,10 @@ class JobPost:
             ''', (job_id,))
             data = cursor.fetchone()
             if data:
-                return cls(job_id=data[0], job_title=data[1], description=data[2], location=data[3], employer=data[4], salary=data[5], username=data[6])
+                return cls(job_id=data[0], job_title=data[1],
+                           description=data[2], location=data[3],
+                           employer=data[4], salary=data[5],
+                           username=data[6], date_posted=data[7])
 
         except sqlite3.Error as err:
             print(f"Error retrieving job post with ID {job_id}: ", err)
@@ -85,7 +91,10 @@ class JobPost:
         try:
             cursor.execute('SELECT * FROM jobs')
             data = cursor.fetchall()
-            return [cls(job_id=row[0], job_title=row[1], description=row[2], location=row[3], employer=row[4], salary=row[5], username=row[6]) for row in data]
+            return [cls(job_id=row[0], job_title=row[1],
+                        description=row[2], location=row[3],
+                        employer=row[4], salary=row[5],
+                        username=row[6], date_posted=row[7]) for row in data]
 
         except sqlite3.Error as err:
             print(f"Error retrieving all job posts: ", err)
@@ -112,7 +121,7 @@ class JobPost:
             connection.commit()
 
             # Notify users after successfully deleting the job post
-            self.notify_users_about_deletion(self.job_id, "A job you saved or applied for has been deleted.")
+            self.notify_users_about_deletion(self.job_id, f"A job you saved or applied for has been deleted: {self.job_title}")
 
             return True
 
@@ -146,9 +155,9 @@ class JobPost:
             # Insert notifications for these users
             for user in users_to_notify:
                 cursor.execute('''
-                    INSERT INTO notifications (username, message)
+                    INSERT INTO notifications (username, message, menu)
                     VALUES (?, ?)
-                ''', (user, message))
+                ''', (user, message, 'job'))
 
             connection.commit()
 
@@ -247,7 +256,7 @@ class JobPost:
 
             # Convert each row into a JobPost object, return the list
             return [cls(job_id=row[0], job_title=row[1], description=row[2], location=row[3], employer=row[4],
-                        salary=row[5], username=row[6]) for row in job_rows]
+                        salary=row[5], username=row[6], date_posted=row[7]) for row in job_rows]
 
         except sqlite3.Error as err:
             print("Error retrieving saved jobs: ", err)
@@ -259,18 +268,21 @@ class JobPost:
     # Allows a user to save an application for a specific job
     def apply(self, username, graduation_date, start_date, application_text):
 
+        today = datetime.now()
+
         connection, cursor = connect_to_database()
         if connection is None: return None
 
         try:
             cursor.execute('''
-                INSERT INTO applications (username, job_id, graduation_date, start_date, application_text)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (username, self.job_id, graduation_date, start_date, application_text))
+                INSERT INTO applications (username, job_id, graduation_date, start_date, application_text, application_date)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (username, self.job_id, graduation_date, start_date, application_text, today))
             connection.commit()
 
             return Application(application_id=cursor.lastrowid, username=username, job_id=self.job_id,
-                       graduation_date=graduation_date, start_date=start_date, application_text=application_text)
+                       graduation_date=graduation_date, start_date=start_date,
+                       application_text=application_text, application_date=today)
 
         except sqlite3.Error as err:
             print("Error applying for the job: ", err)
@@ -326,7 +338,7 @@ class JobPost:
 
             # Convert each row into an object, return the list
             return [cls(job_id=row[0], job_title=row[1], description=row[2], location=row[3], employer=row[4],
-                        salary=row[5], username=row[6]) for row in job_rows]
+                        salary=row[5], username=row[6], date_posted=row[7]) for row in job_rows]
 
         except sqlite3.Error as err:
             print(f"Error fetching applied jobs for username {username}: ", err)

@@ -230,10 +230,13 @@ def search_by(attribute):
 
 def home():
 
+    user = config.user
+
+    # Notifications
+    user.notify('home')
+
     # Display Menu
     while True:
-
-        user = config.user
 
         print("")
         print("Logged in as", user.first_name, user.last_name)
@@ -257,7 +260,8 @@ def home():
         print("         [8] Log Out")
         print("")
 
-        user.receive_notifications()
+        # Messages
+        user.check_messages()
 
         # User Chooses
         choice = input("Enter an option (or press Enter to access links): ")

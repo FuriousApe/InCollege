@@ -92,7 +92,9 @@ def create_users_table():
                 university VARCHAR(100),
                 major VARCHAR(50),
                 created_a_profile BOOLEAN,
-                plus BOOLEAN
+                plus BOOLEAN,
+                last_login_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+                date_joined DATETIME DEFAULT CURRENT_TIMESTAMP
             );
         ''')
         connection.commit()
@@ -213,6 +215,7 @@ def create_job_table():
                 employer VARCHAR(100),
                 salary DECIMAL(10, 2),
                 username VARCHAR(12),
+                date_posted DATETIME DEFAULT CURRENT_TIMESTAMP,
                 CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
@@ -276,6 +279,7 @@ def create_applications_table():
                 graduation_date DATE,
                 start_date DATE,
                 application_text TEXT,
+                application_date DATETIME DEFAULT CURRENT_TIMESTAMP,
                 CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username),
                 CONSTRAINT fk_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id) ON DELETE CASCADE
             );
@@ -299,13 +303,14 @@ def create_notifications_table():
     if connection is None:
         return
 
-    try:
+    try:                            # ADDED 'menu'
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS notifications (
                 notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username VARCHAR(12),
                 message TEXT,
                 seen BOOLEAN DEFAULT FALSE,
+                menu TEXT,
                 CONSTRAINT fk_username FOREIGN KEY (username) REFERENCES users(username)
             );
         ''')
