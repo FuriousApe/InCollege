@@ -1,6 +1,7 @@
 
 import sqlite3
 import config
+from classes.JobPost import JobPost
 from data_ import connect_to_database
 from datetime import datetime, timedelta
 
@@ -384,22 +385,28 @@ class User:
     def clear_notifications(self, menu):
         return Notification.delete_all_for(self.username, menu)
 
+
+    # Get time from last application
+    def been_week_since_last_app(self):
+        time_difference = datetime.now() - self.most_recent_app().application_date
+        been_at_least_a_week = time_difference >= timedelta(days=7)
+        return been_at_least_a_week
+
     # Creates all applicable notifications for username
     def create_all_notifications(self):
 
         notifications = { }
 
         if self.most_recent_app():
-            time_difference = datetime.now() - self.most_recent_app().application_date
-            been_at_least_a_week = time_difference >= timedelta(days=7)
 
-            if been_at_least_a_week:
+            if self.been_week_since_last_app():
                 notifications["Remember – you're going to want to have a job when you graduate. Make sure that you start to apply for jobs today!"] = "home"
 
         new_users = self.new_users_since_login()
         new_jobs = self.new_jobs_since_login()
         self.inbox = Message.fetch_all(self.username)
         apps = Application.get_apps_from(self.username)
+
 
         if not self.created_a_profile:
             notifications["Don't forget to create a profile"] = "home"
@@ -421,6 +428,7 @@ class User:
         for message, menu in notifications.items():
             Notification.create(self.username, message, menu)
 
+        return notifications
 
     #::::::::::::::::::::::::::  A P P L I C A T I O N S
 
