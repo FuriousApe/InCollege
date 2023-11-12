@@ -18,6 +18,7 @@ import config
 import applications_
 import home_
 from data_ import connect_to_database
+from datetime import datetime
 
 from classes.JobPost import JobPost
 
@@ -116,7 +117,8 @@ def post_job_menu():
             location = location,
             employer = employer,
             salary = salary,
-            username = username
+            username = username,
+            date_posted = datetime.now()
         )
 
         # Save to DB
@@ -136,22 +138,12 @@ def post_job_menu():
 #------------------------------#    Job Menu    #------------------------------#
 #------------------------------#----------------#------------------------------#
 
-       # Provides option to find a job, find an internship, or post a job #
-                      # One of the paths from home() #
-
 def menu():
 
     user = config.user
 
-    # Fetch notifications for the user
-    notifications = user.fetch_notifications()
-
-    # If there are any, display and delete them
-    for message in notifications:
-        print(f"\n*-*-*\nNotification: {message}\n*-*-*\n")
-
-    # Deleting them
-    if notifications: user.delete_notifications()
+    # Notifications
+    user.notify('job')
 
     while True:
 

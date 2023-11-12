@@ -17,6 +17,7 @@ import config
 import home_
 import profiles_
 from data_ import connect_to_database
+from datetime import datetime
 
 from classes.User import User
 from classes.UserSettings import UserSettings
@@ -193,6 +194,8 @@ def login():
             config.settings = UserSettings.fetch(username)
             config.profile = UserProfile.fetch(username)
 
+            config.user.create_all_notifications()
+
             home_.home()
 
             return
@@ -219,6 +222,8 @@ def login():
             # Logs the user out; resets all global variables to default #
 
 def logout():
+    config.user.last_login_date = datetime.now()
+    config.user.save()
 
     config.user = None
     config.profile = None
