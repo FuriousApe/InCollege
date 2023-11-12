@@ -194,6 +194,7 @@ def login():
             config.settings = UserSettings.fetch(username)
             config.profile = UserProfile.fetch(username)
 
+
             config.user.create_all_notifications()
 
             home_.home()
